@@ -1,5 +1,6 @@
 from sqlalchemy import Column, String, Integer, ForeignKey, Date, Float
 from sqlalchemy.ext.declarative import declarative_base
+from sqlalchemy.orm import relationship
 
 
 class data_model():
@@ -24,6 +25,8 @@ class data_model():
             id = Column(Integer, primary_key=True, autoincrement=True)
             name = Column(String(60), nullable=False)
 
+            accounts = relationship("Account", back_populates="type")
+
             def __repr__(self):
                 return f"<AccountType(id='{self.id}', name='{self.name}')>"
 
@@ -35,6 +38,8 @@ class data_model():
             id = Column(Integer, primary_key=True, autoincrement=True)
             name = Column(String(60), nullable=False)
             shortname = Column(String(60), nullable=False)
+
+            accounts = relationship("Account", back_populates="currency")
 
             def __repr__(self):
                 return f"<Currency(id='{self.id}', name='{self.name}', shortname='{self.shortname}')>"
@@ -48,6 +53,8 @@ class data_model():
             user_id = Column(String(60), nullable=False)
             user_name = Column(String(60), nullable=False)
 
+            transactions = relationship("Transaction", back_populates="user")
+
             def __repr__(self):
                 return f"<User(id='{self.id}', user_id='{self.user_id}', user_name='{self.user_name}')>"
 
@@ -59,8 +66,12 @@ class data_model():
             id = Column(Integer, primary_key=True, autoincrement=True)
             name = Column(String(60), nullable=False)
             user = Column(Integer, ForeignKey("users.id"), nullable=False)
-            currency = Column(Integer, ForeignKey("currencies.id"), nullable=False)
-            type = Column(Integer, ForeignKey("account_types.id"), nullable=False)
+            currency_id = Column(Integer, ForeignKey("currencies.id"), nullable=False)
+            type_id = Column(Integer, ForeignKey("account_types.id"), nullable=False)
+
+            currency = relationship("Currency")
+            type = relationship("AccountType")
+            transactions = relationship("Transaction", back_populates="account")
 
             def __repr__(self):
                 return f"<Account(id='{self.id}', name='{self.name}', user='{self.user}',\
@@ -74,6 +85,8 @@ class data_model():
             id = Column(Integer, primary_key=True, autoincrement=True)
             name = Column(String(60), nullable=False)
 
+            categories = relationship("Category", back_populates="type")
+
             def __repr__(self):
                 return f"<CategoryType(id='{self.id}', name='{self.name}')>"
 
@@ -84,7 +97,10 @@ class data_model():
 
             id = Column(Integer, primary_key=True, autoincrement=True)
             name = Column(String(60), nullable=False)
-            type = Column(Integer, ForeignKey("category_types.id"), nullable=False)
+            type_id = Column(Integer, ForeignKey("category_types.id"), nullable=False)
+
+            type = relationship("CategoryType")
+            transactions = relationship("Transaction", back_populates="category")
 
             def __repr__(self):
                 return f"<Category(id='{self.id}', name='{self.name}', type='{self.type}')>"
@@ -97,6 +113,8 @@ class data_model():
             id = Column(Integer, primary_key=True, autoincrement=True)
             name = Column(String(60), nullable=False)
 
+            transactions = relationship("Transaction", back_populates="type")
+
             def __repr__(self):
                 return f"<TransactionType(id='{self.id}', name='{self.name}')>"
 
@@ -107,11 +125,16 @@ class data_model():
 
             id = Column(Integer, primary_key=True, autoincrement=True)
             date = Column(Date, nullable=False)
-            user = Column(Integer, ForeignKey("users.id"), nullable=False)
-            category = Column(Integer, ForeignKey("categories.id"), nullable=False)
+            user_id = Column(Integer, ForeignKey("users.id"), nullable=False)
+            category_id = Column(Integer, ForeignKey("categories.id"), nullable=False)
             amount = Column(Float, nullable=False)
-            account = Column(Integer, ForeignKey("accounts.id"), nullable=False)
-            type = Column(Integer, ForeignKey("transaction_types.id"), nullable=False)
+            account_id = Column(Integer, ForeignKey("accounts.id"), nullable=False)
+            type_id = Column(Integer, ForeignKey("transaction_types.id"), nullable=False)
+
+            user = relationship("User")
+            category = relationship("Category")
+            account = relationship("Account")
+            type = relationship("TransactionType")
 
             def __repr__(self):
                 return f"<Transaction(id='{self.id}', date='{self.date}', user='{self.user}',\
