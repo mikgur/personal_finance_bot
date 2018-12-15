@@ -3,3 +3,4 @@ env/
 .vscode/
 settings.py
 setup.cfg
+pf_bot.log
