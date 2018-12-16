@@ -31,8 +31,9 @@ personal_finance_bot это телеграм бот, который помога
 Запуск
 ---------
 
-Для создания базы данных запустите
+Для создания базы данных и заполнения ее первоначальными данными запустите
 
 .. code-block:: text
 
-    python db_creator.py
+    python create_db.py
+    python populate_db.py

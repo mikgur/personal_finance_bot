@@ -4,7 +4,7 @@ from sqlalchemy import create_engine
 from sqlalchemy.exc import OperationalError, ProgrammingError
 from sqlalchemy_utils import database_exists, create_database
 
-from data_model import data_model
+import model
 import settings
 
 
@@ -16,7 +16,6 @@ if __name__ == '__main__':
         if not database_exists(db.url):
             print(f"Creating database {settings.DB_DATABASE}...")
             create_database(db.url)
-            model = data_model()
             base = model.base
             base.metadata.create_all(db)
             print("Done!")
