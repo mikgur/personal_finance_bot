@@ -1,4 +1,6 @@
 """Script for creating a new database for personal_finance_bot"""
+import logging
+
 from sqlalchemy import create_engine
 from sqlalchemy.exc import OperationalError, ProgrammingError
 from sqlalchemy_utils import database_exists, create_database
@@ -13,11 +15,12 @@ def create_db():
                     @{settings.DB_HOST}:{settings.DB_PORT}/{settings.DB_DATABASE}"
         db = create_engine(db_string)
         if not database_exists(db.url):
-            print(f"Creating database {settings.DB_DATABASE}...")
+            logging.info(f"Creating database {settings.DB_DATABASE}...")
             create_database(db.url)
             base.metadata.create_all(db)
-            print("Done!")
+            logging.info("Done!")
         else:
-            print(f"Database {settings.DB_DATABASE} exist. Please provide another DB_DATABASE in settings.py")
+            logging.warning(f"Database {settings.DB_DATABASE} exist. \
+                             Please provide another DB_DATABASE in settings.py")
     except (OperationalError, ProgrammingError) as exc:
-        print(f"Error while working with DB: {exc}")
+        logging.error(f"Error while working with DB: {exc}")
