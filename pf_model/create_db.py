@@ -1,14 +1,13 @@
 """Script for creating a new database for personal_finance_bot"""
-
 from sqlalchemy import create_engine
 from sqlalchemy.exc import OperationalError, ProgrammingError
 from sqlalchemy_utils import database_exists, create_database
 
-import model
+from .model import base
 import settings
 
 
-if __name__ == '__main__':
+def create_db():
     try:
         db_string = f"postgres://{settings.DB_USER}:{settings.DB_PASSWORD}\
                     @{settings.DB_HOST}:{settings.DB_PORT}/{settings.DB_DATABASE}"
@@ -16,7 +15,6 @@ if __name__ == '__main__':
         if not database_exists(db.url):
             print(f"Creating database {settings.DB_DATABASE}...")
             create_database(db.url)
-            base = model.base
             base.metadata.create_all(db)
             print("Done!")
         else:

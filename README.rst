@@ -35,5 +35,4 @@ personal_finance_bot это телеграм бот, который помога
 
 .. code-block:: text
 
-    python create_db.py
-    python populate_db.py
+    python run.py
