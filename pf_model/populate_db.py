@@ -2,12 +2,12 @@ from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 from sqlalchemy.exc import OperationalError, ProgrammingError
 
-from model import CategoryType, Category, Currency, AccountType,\
+from .model import CategoryType, Category, Currency, AccountType,\
                        TransactionType
 import settings
 
 
-if __name__ == '__main__':
+def populate_db():
     try:
         db_string = f"postgres://{settings.DB_USER}:{settings.DB_PASSWORD}\
                     @{settings.DB_HOST}:{settings.DB_PORT}/{settings.DB_DATABASE}"
