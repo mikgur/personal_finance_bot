@@ -5,7 +5,8 @@
      - accessing existing database
     """
 
-from sqlalchemy import Column, String, Integer, ForeignKey, Date, Float, create_engine
+from sqlalchemy import (Column, Date, Float, ForeignKey, Integer, String,
+                        create_engine)
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import relationship
 

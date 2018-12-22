@@ -1,13 +1,14 @@
 """Script for creating a new database for personal_finance_bot"""
 import logging
 
-from sqlalchemy.orm import sessionmaker
 from sqlalchemy.exc import OperationalError, ProgrammingError
-from sqlalchemy_utils import database_exists, create_database
+from sqlalchemy.orm import sessionmaker
+from sqlalchemy_utils import create_database, database_exists
 
-from .model import base, db, AccountType, CategoryType, Currency,\
-                       TransactionType
 import settings
+
+from .model import (AccountType, CategoryType, Currency, TransactionType, base,
+                    db)
 
 
 def create_db():
