@@ -1,9 +1,11 @@
 import logging
 
+import pf_bot.utils as utils
+from pf_bot.exceptions import PFBNoCurrencies, PFBWrongCategory
 from pf_model import data
 
 
-def start_chat(bot, update, user_data):
+def start_chat(bot, update):
     logging.debug("start_chat")
     user = update.message.from_user
     text = f"Привет, {user.first_name},"
@@ -23,3 +25,16 @@ def start_chat(bot, update, user_data):
             text = f"{text}\n{i+1}. {account}"
 
     update.message.reply_text(text)
+
+
+def add_transaction(bot, update):
+    user = update.message.from_user
+    try:
+        transaction = utils.parse_transaction(update.message.text, user.id)
+        data.add_transaction(transaction, user.id)
+        update.message.reply_text("Запись сделана!")
+    except PFBNoCurrencies:
+        update.message.reply_text("В базе данных не найдено ни одной валюты. Нужно добавить хотя бы одну валюту, \
+перед вводом транзакций")
+    except PFBWrongCategory:
+        update.message.reply_text("Не могу распознать категорию")
