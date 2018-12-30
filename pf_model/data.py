@@ -5,17 +5,11 @@ import logging
 
 from sqlalchemy.orm import sessionmaker
 
+from pf_bot.exceptions import PFBWrongCategoryType
+
 from .model import (Account, AccountType, Category, CategoryType, Currency,
                     Transaction, TransactionType, User, db)
-
-
-def is_existing_user(user_id):
-    '''Does this user exist in database?
-    '''
-    logging.debug("is_existing_user")
-    Session = sessionmaker(bind=db)
-    session = Session()
-    return bool(session.query(User).filter(User.user_id == user_id).all())
+from .utils import get_category_type_by_alias
 
 
 def add_account(name, user_id, currency_name, account_type_name="general"):
@@ -49,7 +43,8 @@ def add_category(name, user_id, category_type_name="expense"):
         Session = sessionmaker(bind=db)
         session = Session()
 
-        category_type = session.query(CategoryType).filter(CategoryType.name == category_type_name).one()
+        category_type_name_db = get_category_type_by_alias(category_type_name)
+        category_type = session.query(CategoryType).filter(CategoryType.name == category_type_name_db).one()
         user = session.query(User).filter(User.user_id == user_id).one()
 
         session.add(Category(name=name, user=user, type=category_type))
@@ -132,11 +127,15 @@ def get_all_category_names(user_id, category_type_name="expense"):
         user = session.query(User).filter(User.user_id == user_id).one()
         query = session.query(Category).filter(Category.user == user)
         if category_type_name:
-            category_type = session.query(CategoryType).filter(CategoryType.name == category_type_name).one()
+            category_type_name_db = get_category_type_by_alias(category_type_name)
+            category_type = session.query(CategoryType).filter(CategoryType.name == category_type_name_db).one()
             query = query.filter(Category.type == category_type)
         return [cat.name for cat in query.all()]
+    except PFBWrongCategoryType:
+        logging.error("Wrong category type is used to access database")
+        return []
     except Exception as exc:
-        logging.error(f'Cannot get categories from database: {exc}')
+        logging.error(f"Cannot get categories from database: {exc}")
         return []
 
 
@@ -148,5 +147,5 @@ def get_all_currencies_shortnames():
 
         return [cur.shortname for cur in session.query(Currency).all()]
     except Exception as exc:
-        logging.error(f'Cannot get currencies list from database: {exc}')
+        logging.error(f"Cannot get currencies list from database: {exc}")
         return []
