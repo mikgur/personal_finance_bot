@@ -5,17 +5,11 @@ import logging
 
 from sqlalchemy.orm import sessionmaker
 
+from pf_bot.exceptions import PFBWrongCategoryType
+
 from .model import (Account, AccountType, Category, CategoryType, Currency,
                     Transaction, TransactionType, User, db)
-
-
-def is_existing_user(user_id):
-    '''Does this user exist in database?
-    '''
-    logging.debug("is_existing_user")
-    Session = sessionmaker(bind=db)
-    session = Session()
-    return bool(session.query(User).filter(User.user_id == user_id).all())
+from .utils import get_category_type_by_alias
 
 
 def add_account(name, user_id, currency_name, account_type_name="general"):
@@ -49,13 +43,26 @@ def add_category(name, user_id, category_type_name="expense"):
         Session = sessionmaker(bind=db)
         session = Session()
 
-        category_type = session.query(CategoryType).filter(CategoryType.name == category_type_name).one()
+        category_type_name_db = get_category_type_by_alias(category_type_name)
+        category_type = session.query(CategoryType).filter(CategoryType.name == category_type_name_db).one()
         user = session.query(User).filter(User.user_id == user_id).one()
 
-        session.add(Category(name=name, user=user, type=category_type))
+        query = session.query(Category).filter(Category.user == user,
+                                               Category.name == name,
+                                               Category.type == category_type)
+        existing_category = query.first()
+        if existing_category:
+            existing_category.is_deleted = False
+        else:
+            session.add(Category(name=name, user=user, type=category_type, is_deleted=False))
         session.commit()
+        return True
+    except PFBWrongCategoryType:
+        logging.error("Wrong category type is used to access database")
+        return False
     except Exception as exc:
         logging.error(f'Error while adding category: {exc}')
+        return False
 
 
 def add_transaction(transaction, user_id):
@@ -106,6 +113,38 @@ def add_user(user_id, user_name):
         logging.error(f'Error while adding user: {exc}')
 
 
+def delete_category(user_id, category_name, category_type_name):
+    logging.info(f"data.delete_category user: {user_id} category_name: {category_name} type: {category_type_name}")
+    try:
+        Session = sessionmaker(bind=db)
+        session = Session()
+
+        user = session.query(User).filter(User.user_id == user_id).one()
+        query = session.query(Category).filter(Category.user == user)
+
+        category_type_name_db = get_category_type_by_alias(category_type_name)
+        category_type = session.query(CategoryType).filter(CategoryType.name == category_type_name_db).one()
+        #  Search for category which needs to be deleted
+        query = query.filter(Category.type == category_type, Category.name == category_name)
+        #  Check that there is only one object in query
+        category = query.one()
+        transaction_query = session.query(Transaction).filter(Transaction.category == category)
+        #  We will delete category if there were no transactions releated to it,
+        #  we will mark category as deleted otherwise
+        if transaction_query.first():
+            category.is_deleted = True
+        else:
+            query.delete()
+        session.commit()
+        return True
+    except PFBWrongCategoryType:
+        logging.error("Wrong category type is used to access database")
+        return False
+    except Exception as exc:
+        logging.error(f"Cannot delete category: {exc}")
+        return False
+
+
 def get_all_account_names(user_id, account_type_name="general"):
     '''returns a list with names of all accounts of particular type'''
     try:
@@ -123,8 +162,10 @@ def get_all_account_names(user_id, account_type_name="general"):
         return []
 
 
-def get_all_category_names(user_id, category_type_name="expense"):
-    '''returns a list with names of all categories of particular type'''
+def get_all_category_names(user_id, category_type_name="expense", status="active"):
+    """returns a list with names of all categories of particular type
+        status = ["active", "deleted", "all"]
+    """
     try:
         Session = sessionmaker(bind=db)
         session = Session()
@@ -132,21 +173,29 @@ def get_all_category_names(user_id, category_type_name="expense"):
         user = session.query(User).filter(User.user_id == user_id).one()
         query = session.query(Category).filter(Category.user == user)
         if category_type_name:
-            category_type = session.query(CategoryType).filter(CategoryType.name == category_type_name).one()
+            category_type_name_db = get_category_type_by_alias(category_type_name)
+            category_type = session.query(CategoryType).filter(CategoryType.name == category_type_name_db).one()
             query = query.filter(Category.type == category_type)
+            if status == "active":
+                query = query.filter(Category.is_deleted.is_(False))
+            elif status == "deleted":
+                query = query.filter(Category.is_deleted.is_(True))
         return [cat.name for cat in query.all()]
+    except PFBWrongCategoryType:
+        logging.error("Wrong category type is used to access database")
+        return []
     except Exception as exc:
-        logging.error(f'Cannot get categories from database: {exc}')
+        logging.error(f"Cannot get categories from database: {exc}")
         return []
 
 
 def get_all_currencies_shortnames():
-    '''returns a list with shortnames of all currencies'''
+    """returns a list with shortnames of all currencies"""
     try:
         Session = sessionmaker(bind=db)
         session = Session()
 
         return [cur.shortname for cur in session.query(Currency).all()]
     except Exception as exc:
-        logging.error(f'Cannot get currencies list from database: {exc}')
+        logging.error(f"Cannot get currencies list from database: {exc}")
         return []

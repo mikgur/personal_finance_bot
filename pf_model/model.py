@@ -5,8 +5,8 @@
      - accessing existing database
     """
 
-from sqlalchemy import (Column, Date, Float, ForeignKey, Integer, String,
-                        create_engine)
+from sqlalchemy import (Boolean, Column, Date, Float, ForeignKey, Integer,
+                        String, create_engine)
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import relationship
 
@@ -96,6 +96,7 @@ class Category(base):
     name = Column(String(60), nullable=False)
     type_id = Column(Integer, ForeignKey("category_types.id"), nullable=False)
     user_id = Column(Integer, ForeignKey("users.id"), nullable=False)
+    is_deleted = Column(Boolean, nullable=False)
 
     type = relationship("CategoryType")
     user = relationship("User")

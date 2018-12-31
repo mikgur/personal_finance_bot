@@ -8,3 +8,7 @@ class PFBNoCurrencies(PFBException):
 
 class PFBWrongCategory(PFBException):
     pass
+
+
+class PFBWrongCategoryType(PFBException):
+    pass

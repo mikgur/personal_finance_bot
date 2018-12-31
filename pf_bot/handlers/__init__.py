@@ -1,15 +1,16 @@
 import logging
 
-import pf_bot.utils as utils
+from pf_bot.utils import get_keyboard, parse_transaction
 from pf_bot.exceptions import PFBNoCurrencies, PFBWrongCategory
 from pf_model import data
+from pf_model.utils import is_existing_user
 
 
 def start_chat(bot, update):
     logging.debug("start_chat")
     user = update.message.from_user
     text = f"Привет, {user.first_name},"
-    if data.is_existing_user(user.id):
+    if is_existing_user(user.id):
         text = f"{text} слушаю тебя"
     else:
         text = f"{text} я помогу тебе управлять личными финансами. \
@@ -24,13 +25,13 @@ def start_chat(bot, update):
         for i, account in enumerate(sorted(data.get_all_account_names(user.id))):
             text = f"{text}\n{i+1}. {account}"
 
-    update.message.reply_text(text)
+    update.message.reply_text(text, reply_markup=get_keyboard())
 
 
 def add_transaction(bot, update):
     user = update.message.from_user
     try:
-        transaction = utils.parse_transaction(update.message.text, user.id)
+        transaction = parse_transaction(update.message.text, user.id)
         data.add_transaction(transaction, user.id)
         update.message.reply_text("Запись сделана!")
     except PFBNoCurrencies:
