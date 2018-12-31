@@ -58,7 +58,13 @@ def add_category(bot, update, user_data):
         clear_user_data(user_data, "categories_menu")
         return ConversationHandler.END
     if new_category in data.get_all_category_names(user.id, user_data["add_category_type"], status="active"):
-        update.message.reply_text("Такая категория уже существует, введи другое название")
+        reply_text = "Такая категория уже существует, кстати, вот список всех категорий, которые у тебя есть:"
+        for i, category in enumerate(sorted(data.get_all_category_names(user.id,
+                                                                        user_data["add_category_type"],
+                                                                        status="active"))):
+            reply_text = f"{reply_text}\n{i+1}. {category}"
+        reply_text = f"{reply_text}\n Введи другое название"
+        update.message.reply_text(reply_text)
         return "add_category"
     else:
         if data.add_category(new_category, user.id, user_data["add_category_type"]):
