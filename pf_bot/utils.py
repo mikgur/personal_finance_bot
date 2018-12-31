@@ -17,9 +17,14 @@ def get_keyboard(context="main_menu", one_time_keyboard=False):
         return ReplyKeyboardMarkup([["Расходы - Добавить категорию", "Расходы - Удалить категорию"],
                                     ["Доходы - Добавить категорию", "Доходы - Удалить категорию"],
                                     ["Назад"]], one_time_keyboard=one_time_keyboard, resize_keyboard=True)
+    elif context == "confirmation":
+        return ReplyKeyboardMarkup([["Да", "Нет"]], one_time_keyboard=one_time_keyboard, resize_keyboard=True)
 
 
 def get_keyboard_from_list(names, number_of_rows=2, cancel=True, one_time_keyboard=False):
+    """
+    Function create a keyboard from names of categories/accounts/other list of objects
+    """
     keyboard_buttons = []
     buttons = names.copy()
     if cancel:
@@ -97,3 +102,12 @@ def amount_with_currency_pattern():
     currencies.extend(currency_variants)
     pattern = ''.join([r"(^|\s)\d+([.,]\d{1,2})? ?(", "|".join(currencies), r")?($|\s)"])
     return pattern
+
+
+def clear_user_data(user_data, conversation="all"):
+    if conversation == "all":
+        user_data.clear()
+    elif conversation == "categories_menu":
+        for key in ["delete_category_name", "delete_category_type"]:
+            if key in user_data:
+                del user_data[key]
