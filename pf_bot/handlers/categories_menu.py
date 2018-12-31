@@ -26,6 +26,7 @@ def start(bot, update):
 
 def menu_choice(bot, update, user_data):
     logging.info("categories_menu menu_choice")
+    clear_user_data(user_data, "categories_menu")
     user = update.message.from_user
     choice = update.message.text
     if choice == "Назад":
@@ -34,14 +35,37 @@ def menu_choice(bot, update, user_data):
         return ConversationHandler.END
 
     category_type, action = choice.split(" - ")
-    user_data["delete_category_type"] = category_type
     categories = data.get_all_category_names(user.id, category_type)
     if action == "Удалить категорию":
+        user_data["delete_category_type"] = category_type
         reply_text = "выберите категорию, которую хотите удалить:"
         update.message.reply_text(reply_text, reply_markup=get_keyboard_from_list(categories, one_time_keyboard=True))
         return "delete_category"
     elif action == "Добавить категорию":
+        user_data["add_category_type"] = category_type
         update.message.reply_text("какое название будет у новой категории?")
+        return "add_category"
+
+
+def add_category(bot, update, user_data):
+    logging.info("categories_menu add_category")
+    user = update.message.from_user
+    new_category = update.message.text.capitalize()
+    if "add_category_type" not in user_data:
+        logging.debug("add_category: category_type is not defined!")
+        update.message.reply_text("не получается определить тип категории, выбери еще раз желаемое действие",
+                                  reply_markup=get_keyboard("main_menu"))
+        clear_user_data(user_data, "categories_menu")
+        return ConversationHandler.END
+    if new_category in data.get_all_category_names(user.id, user_data["add_category_type"], status="active"):
+        update.message.reply_text("Такая категория уже существует, введи другое название")
+        return "add_category"
+    else:
+        if data.add_category(new_category, user.id, user_data["add_category_type"]):
+            reply_text = f"Категория {new_category} добавлена!"
+        else:
+            reply_text = f"Не получилось добавить категорию {new_category}"
+        update.message.reply_text(reply_text, reply_markup=get_keyboard("main_menu"))
         clear_user_data(user_data, "categories_menu")
         return ConversationHandler.END
 
@@ -128,7 +152,8 @@ conversation = ConversationHandler(
         states={
             "menu_choice": [RegexHandler(make_re_template_for_menu(action_choices), menu_choice, pass_user_data=True)],
             "delete_category": [MessageHandler(Filters.text, delete_category, pass_user_data=True)],
-            "confirm_delete_category": [MessageHandler(Filters.text, confirm_delete_category, pass_user_data=True)]
+            "confirm_delete_category": [MessageHandler(Filters.text, confirm_delete_category, pass_user_data=True)],
+            "add_category": [MessageHandler(Filters.text, add_category, pass_user_data=True)]
         },
         fallbacks=[]
     )

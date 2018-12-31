@@ -108,6 +108,6 @@ def clear_user_data(user_data, conversation="all"):
     if conversation == "all":
         user_data.clear()
     elif conversation == "categories_menu":
-        for key in ["delete_category_name", "delete_category_type"]:
+        for key in ["delete_category_name", "delete_category_type", "add_category_type"]:
             if key in user_data:
                 del user_data[key]
