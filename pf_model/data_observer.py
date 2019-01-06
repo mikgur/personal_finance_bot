@@ -3,10 +3,11 @@
 import logging
 
 from sqlalchemy.orm import sessionmaker
+from sqlalchemy import func
 
 from pf_bot.exceptions import PFBWrongCategoryType
 
-from .model import (Account, AccountType, Category, CategoryType, Currency,
+from .model import (Account, AccountType, Category, CategoryType, Currency, Transaction,
                     User, db)
 from .utils import get_category_type_by_alias
 
@@ -64,4 +65,35 @@ def get_all_currencies_shortnames():
         return [cur.shortname for cur in session.query(Currency).all()]
     except Exception as exc:
         logging.error(f"Cannot get currencies list from database: {exc}")
+        return []
+
+
+def statistics_for_period_by_category(user_id, period, category_type_name="expense"):
+    """returns a transaction amounts aggregated by categories for a period"""
+    try:
+        Session = sessionmaker(bind=db)
+        session = Session()
+
+        user = session.query(User).filter(User.user_id == user_id).one()
+        category_type = session.query(CategoryType).filter(CategoryType.name == category_type_name).one()
+
+        query = session.query(
+                              func.sum(Transaction.amount).label('total'),
+                              Category.name
+        ).join(
+               Category,
+               CategoryType
+        ).filter(
+                 Transaction.user_id == user.id,
+                 CategoryType.id == category_type.id
+        ).group_by(
+                   Category.name
+        ).order_by(
+                   func.sum(Transaction.amount).label('total').desc()
+        )
+
+        return query.all()
+
+    except Exception as exc:
+        logging.error(f"Cannot get transactions list from database: {exc}")
         return []

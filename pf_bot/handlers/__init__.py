@@ -2,7 +2,7 @@ import logging
 
 from pf_bot.utils import get_keyboard, parse_transaction
 from pf_bot.exceptions import PFBNoCurrencies, PFBWrongCategory
-from pf_model import data_manipulator
+from pf_model import data_manipulator, data_observer
 from pf_model.utils import is_existing_user
 
 
@@ -18,11 +18,11 @@ def start_chat(bot, update):
         data_manipulator.add_user(user.id, user.first_name)
 
         text = f"{text}\n\nТвои категории расходов:"
-        for i, category in enumerate(sorted(data_manipulator.get_all_category_names(user.id))):
+        for i, category in enumerate(sorted(data_observer.get_all_category_names(user.id))):
             text = f"{text}\n{i+1}. {category}"
 
         text = f"{text}\n\nТвои счета:"
-        for i, account in enumerate(sorted(data_manipulator.get_all_account_names(user.id))):
+        for i, account in enumerate(sorted(data_observer.get_all_account_names(user.id))):
             text = f"{text}\n{i+1}. {account}"
 
     update.message.reply_text(text, reply_markup=get_keyboard())
@@ -39,3 +39,14 @@ def add_transaction(bot, update):
 перед вводом транзакций")
     except PFBWrongCategory:
         update.message.reply_text("Не могу распознать категорию")
+
+
+def statistics(bot, update):
+    user = update.message.from_user
+
+    reply_text = "Вот статистика ваших расходов:"
+    for expense in data_observer.statistics_for_period_by_category(user.id, "period"):
+        amount = f"{expense[0]:,.0f}".replace(",", " ")
+        reply_text = "\n".join([reply_text, f"{expense[1]} - {amount}"])
+
+    update.message.reply_text(reply_text)
