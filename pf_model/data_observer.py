@@ -2,13 +2,13 @@
 '''
 import logging
 
-from sqlalchemy.orm import sessionmaker
 from sqlalchemy import func
+from sqlalchemy.orm import sessionmaker
 
 from pf_bot.exceptions import PFBWrongCategoryType
 
-from .model import (Account, AccountType, Category, CategoryType, Currency, Transaction,
-                    User, db)
+from .model import (Account, AccountType, Category, CategoryType, Currency,
+                    Transaction, User, db)
 from .utils import get_category_type_by_alias
 
 
@@ -85,7 +85,9 @@ def statistics_for_period_by_category(user_id, period, category_type_name="expen
                CategoryType
         ).filter(
                  Transaction.user_id == user.id,
-                 CategoryType.id == category_type.id
+                 CategoryType.id == category_type.id,
+                 Transaction.date >= period[0],
+                 Transaction.date <= period[1]
         ).group_by(
                    Category.name
         ).order_by(

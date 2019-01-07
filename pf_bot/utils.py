@@ -1,3 +1,5 @@
+import calendar
+import datetime
 import logging
 import re
 
@@ -39,6 +41,26 @@ def get_keyboard_from_list(names, number_of_rows=2, cancel=True, one_time_keyboa
 
 def make_re_template_for_menu(choices):
     return f"^({')|('.join(choices)})$"
+
+
+def month_edges(month_relative_positions=0):
+    """ return edges of month which is month_relative_position earlier then current:
+        month_edges(0) in Jan 2019 will return [01.01.2019, 31.01.2019]
+        month_edges(1) in Jan 2019 will return [01.12.2018, 31.12.2018]
+        month_edges(12) in Jan 2019 will return [01.01.2018, 31.01.2018]
+    """
+    today = datetime.datetime.today()
+    year = today.year - month_relative_positions // 12
+    if today.month > month_relative_positions % 12:
+        month = today.month - month_relative_positions % 12
+    else:
+        year -= 1
+        month = 12 + (today.month - month_relative_positions % 12)
+
+    _, num_days = calendar.monthrange(year, month)
+    first_day = datetime.date(year=year, month=month, day=1)
+    last_day = datetime.date(year=year, month=month, day=num_days)
+    return [first_day, last_day]
 
 
 def parse_transaction(line, user_id):

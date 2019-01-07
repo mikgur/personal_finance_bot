@@ -1,6 +1,6 @@
 import logging
 
-from pf_bot.utils import get_keyboard, parse_transaction
+from pf_bot.utils import get_keyboard, parse_transaction, month_edges
 from pf_bot.exceptions import PFBNoCurrencies, PFBWrongCategory
 from pf_model import data_manipulator, data_observer
 from pf_model.utils import is_existing_user
@@ -44,8 +44,13 @@ def add_transaction(bot, update):
 def statistics(bot, update):
     user = update.message.from_user
 
-    reply_text = "Вот статистика ваших расходов:"
-    for expense in data_observer.statistics_for_period_by_category(user.id, "period"):
+    reply_text = "Вот статистика расходов в текущем месяце:"
+    for expense in data_observer.statistics_for_period_by_category(user.id, month_edges()):
+        amount = f"{expense[0]:,.0f}".replace(",", " ")
+        reply_text = "\n".join([reply_text, f"{expense[1]} - {amount}"])
+
+    reply_text = "\n \n".join([reply_text, f"твои расходы в прошлом месяце:"])
+    for expense in data_observer.statistics_for_period_by_category(user.id, month_edges(1)):
         amount = f"{expense[0]:,.0f}".replace(",", " ")
         reply_text = "\n".join([reply_text, f"{expense[1]} - {amount}"])
 
