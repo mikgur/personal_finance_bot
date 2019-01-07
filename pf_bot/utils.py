@@ -1,10 +1,12 @@
+import calendar
+import datetime
 import logging
 import re
 
 from telegram import ReplyKeyboardMarkup
 
 from pf_bot.exceptions import PFBNoCurrencies, PFBWrongCategory
-from pf_model import data
+from pf_model import data_observer
 
 AMOUNT_PATTERN = r"(^|\s)\d+([.,]\d{1,2})?"
 
@@ -41,6 +43,26 @@ def make_re_template_for_menu(choices):
     return f"^({')|('.join(choices)})$"
 
 
+def month_edges(month_relative_positions=0):
+    """ return edges of month which is month_relative_position earlier then current:
+        month_edges(0) in Jan 2019 will return [01.01.2019, 31.01.2019]
+        month_edges(1) in Jan 2019 will return [01.12.2018, 31.12.2018]
+        month_edges(12) in Jan 2019 will return [01.01.2018, 31.01.2018]
+    """
+    today = datetime.datetime.today()
+    year = today.year - month_relative_positions // 12
+    if today.month > month_relative_positions % 12:
+        month = today.month - month_relative_positions % 12
+    else:
+        year -= 1
+        month = 12 + (today.month - month_relative_positions % 12)
+
+    _, num_days = calendar.monthrange(year, month)
+    first_day = datetime.date(year=year, month=month, day=1)
+    last_day = datetime.date(year=year, month=month, day=num_days)
+    return [first_day, last_day]
+
+
 def parse_transaction(line, user_id):
     text = line.lower()
     try:
@@ -57,7 +79,7 @@ def parse_transaction(line, user_id):
     text = text.replace(transaction_amount_currency, "")
 
     #  Search for category
-    expense_category_list = [category for category in data.get_all_category_names(user_id)
+    expense_category_list = [category for category in data_observer.get_all_category_names(user_id)
                              if category.lower() in text]
     transaction_category = ""
     transaction_type = ""
@@ -66,7 +88,7 @@ def parse_transaction(line, user_id):
         text = text.replace(transaction_category, "")
         transaction_type = "expense"
     else:
-        income_category_list = [category for category in data.get_all_category_names(user_id, "income")
+        income_category_list = [category for category in data_observer.get_all_category_names(user_id, "income")
                                 if category.lower() in text]
         if income_category_list:
             transaction_category = max(income_category_list, key=len)
@@ -77,7 +99,7 @@ def parse_transaction(line, user_id):
             raise PFBWrongCategory
 
     # Search for account
-    account_list = [account for account in data.get_all_account_names(user_id) if account.lower() in text]
+    account_list = [account for account in data_observer.get_all_account_names(user_id) if account.lower() in text]
     transaction_account = ""
     if account_list:
         transaction_account = max(account_list, key=len)
@@ -94,7 +116,7 @@ def amount_with_currency_pattern():
     (e.g. '123.23usd', '12,4 руб')
     """
     logging.debug("building transaction pattern")
-    currencies = data.get_all_currencies_shortnames()
+    currencies = data_observer.get_all_currencies_shortnames()
     if not currencies:
         raise PFBNoCurrencies
     currency_variants = [currency.capitalize() for currency in currencies]
