@@ -20,7 +20,7 @@ def run_bot():
     # Will try to parse and add a transaction
     dp.add_handler(MessageHandler(Filters.regex(utils.AMOUNT_PATTERN), handlers.add_transaction))
     dp.add_handler(categories_menu.conversation)
-    dp.add_handler(RegexHandler(r"^(Статистика)$", handlers.statistics))
+    dp.add_handler(RegexHandler(r"^(Статистика)$", handlers.show_statistics))
     my_bot.start_polling()
     logging.debug("pf_bot started...")
     my_bot.idle()
