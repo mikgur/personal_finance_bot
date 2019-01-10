@@ -1,7 +1,13 @@
 import logging
+from io import BytesIO
 
-from pf_bot.utils import get_keyboard, parse_transaction, month_edges
+import pandas as pd
+import matplotlib
+matplotlib.use("Agg") # NOQA
+import seaborn as sns
+
 from pf_bot.exceptions import PFBNoCurrencies, PFBWrongCategory
+from pf_bot.utils import get_keyboard, month_edges, parse_transaction
 from pf_model import data_manipulator, data_observer
 from pf_model.utils import is_existing_user
 
@@ -41,17 +47,37 @@ def add_transaction(bot, update):
         update.message.reply_text("Не могу распознать категорию")
 
 
-def statistics(bot, update):
+def show_statistics(bot, update):
     user = update.message.from_user
 
-    reply_text = "Вот статистика расходов в текущем месяце:"
+    reply_text = "Вот статистика расходов в текущем месяце:\n "
     for expense in data_observer.statistics_for_period_by_category(user.id, month_edges()):
         amount = f"{expense[0]:,.0f}".replace(",", " ")
         reply_text = "\n".join([reply_text, f"{expense[1]} - {amount}"])
 
-    reply_text = "\n \n".join([reply_text, f"твои расходы в прошлом месяце:"])
+    reply_text = "\n \n".join([reply_text, f"Твои расходы в прошлом месяце:\n "])
     for expense in data_observer.statistics_for_period_by_category(user.id, month_edges(1)):
         amount = f"{expense[0]:,.0f}".replace(",", " ")
         reply_text = "\n".join([reply_text, f"{expense[1]} - {amount}"])
 
     update.message.reply_text(reply_text)
+
+    #  Send the barplot with statistics
+    current_data = data_observer.statistics_for_period_by_category(user.id, month_edges())
+    df_current = pd.DataFrame(current_data, columns=['Amount', 'Category'])
+    df_current['Month'] = 'Current'
+
+    previous_data = data_observer.statistics_for_period_by_category(user.id, month_edges(1))
+    df_previous = pd.DataFrame(previous_data, columns=['Amount', 'Category'])
+    df_previous['Month'] = 'Previous'
+
+    data = pd.concat([df_current, df_previous])
+    sns.set_style("darkgrid")
+    sns.set_context("notebook", font_scale=1.5)
+    sns.set_palette("deep")
+    plot = sns.barplot(x="Category", y="Amount", hue="Month", data=data)
+    plot.set_xlabel("")
+    imgdata = BytesIO()
+    plot.figure.savefig(imgdata, format="png")
+    imgdata.seek(0)
+    bot.send_photo(chat_id=update.message.chat_id, photo=imgdata)
