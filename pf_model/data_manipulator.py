@@ -61,7 +61,7 @@ def add_category(name, user_id, category_type_name="expense"):
             session.add(Category(name=name, user=user, type=category_type, is_deleted=False))
         session.commit()
         return True
-    except PFBWrongCategoryType:
+    except WrongCategoryType:
         logging.error("Wrong category type is used to access database")
         return False
     except PFBCategoryAlreadyExist:
@@ -121,7 +121,6 @@ def add_user(user_id, user_name):
 
 
 def delete_category(user_id, category_name, category_type_name):
-    logging.info(f"data.delete_category user: {user_id} category_name: {category_name} type: {category_type_name}")
     try:
         Session = sessionmaker(bind=db)
         session = Session()
@@ -144,7 +143,7 @@ def delete_category(user_id, category_name, category_type_name):
             query.delete()
         session.commit()
         return True
-    except PFBWrongCategoryType:
+    except WrongCategoryType:
         logging.error("Wrong category type is used to access database")
         return False
     except Exception as exc:

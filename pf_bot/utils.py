@@ -5,7 +5,7 @@ import re
 
 from telegram import ReplyKeyboardMarkup
 
-from pf_bot.exceptions import PFBNoCurrencies, PFBWrongCategory
+from pf_bot.exceptions import NoCurrencies, WrongCategory
 from pf_model import data_observer
 
 AMOUNT_PATTERN = r"(^|\s)\d+([.,]\d{1,2})?"
@@ -69,7 +69,7 @@ def parse_transaction(line, user_id):
         #  Search for transaction amount and currency
         amount_mo = re.search(amount_with_currency_pattern(), text)
         transaction_amount_currency = amount_mo.group().strip()
-    except PFBNoCurrencies:
+    except NoCurrencies:
         logging.error("There are no currencies in database")
         raise
 
@@ -96,7 +96,7 @@ def parse_transaction(line, user_id):
             transaction_type = "income"
         else:
             logging.debug("при вводе транзакции указана неверная категория")
-            raise PFBWrongCategory
+            raise WrongCategory
 
     # Search for account
     account_list = [account for account in data_observer.get_all_account_names(user_id) if account.lower() in text]
@@ -118,7 +118,7 @@ def amount_with_currency_pattern():
     logging.debug("building transaction pattern")
     currencies = data_observer.get_all_currencies_shortnames()
     if not currencies:
-        raise PFBNoCurrencies
+        raise NoCurrencies
     currency_variants = [currency.capitalize() for currency in currencies]
     currency_variants.extend([currency.upper() for currency in currencies])
     currencies.extend(currency_variants)
