@@ -16,8 +16,8 @@ def get_keyboard(context="main_menu", one_time_keyboard=False):
         return ReplyKeyboardMarkup([["Ввести доход/расход", "Статистика"],
                                     ["Категории", "Счета"]], resize_keyboard=True)
     elif context == "categories_menu":
-        return ReplyKeyboardMarkup([["Расходы - Добавить категорию", "Расходы - Удалить категорию"],
-                                    ["Доходы - Добавить категорию", "Доходы - Удалить категорию"],
+        return ReplyKeyboardMarkup([["Расходы – Добавить категорию", "Расходы – Удалить категорию"],
+                                    ["Доходы – Добавить категорию", "Доходы – Удалить категорию"],
                                     ["Назад"]], one_time_keyboard=one_time_keyboard, resize_keyboard=True)
     elif context == "confirmation":
         return ReplyKeyboardMarkup([["Да", "Нет"]], one_time_keyboard=one_time_keyboard, resize_keyboard=True)

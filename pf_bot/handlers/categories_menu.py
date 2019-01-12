@@ -9,16 +9,15 @@ from pf_bot.utils import (clear_user_data, get_keyboard,
 from pf_model import data_manipulator, data_observer
 
 action_choices = [
-                 "Расходы - Добавить категорию",
-                 "Расходы - Удалить категорию",
-                 "Доходы - Добавить категорию",
-                 "Доходы - Удалить категорию",
+                 "Расходы – Добавить категорию",
+                 "Расходы – Удалить категорию",
+                 "Доходы – Добавить категорию",
+                 "Доходы – Удалить категорию",
                  "Назад"
 ]
 
 
 def start(bot, update):
-    logging.info("start categories_menu conversation")
     update.message.reply_text("выбери, что именно нужно сделать",
                               reply_markup=get_keyboard("categories_menu", one_time_keyboard=True)
                               )
@@ -26,7 +25,6 @@ def start(bot, update):
 
 
 def menu_choice(bot, update, user_data):
-    logging.info("categories_menu menu_choice")
     clear_user_data(user_data, "categories_menu")
     user = update.message.from_user
     choice = update.message.text
@@ -35,7 +33,7 @@ def menu_choice(bot, update, user_data):
         clear_user_data(user_data, "categories_menu")
         return ConversationHandler.END
 
-    category_type, action = choice.split(" - ")
+    category_type, action = choice.split(" – ")
     categories = data_observer.get_all_category_names(user.id, category_type)
     if action == "Удалить категорию":
         user_data["delete_category_type"] = category_type
@@ -49,7 +47,6 @@ def menu_choice(bot, update, user_data):
 
 
 def add_category(bot, update, user_data):
-    logging.info("categories_menu add_category")
     user = update.message.from_user
     new_category = update.message.text.capitalize()
 
@@ -87,12 +84,11 @@ def add_category(bot, update, user_data):
 
 
 def delete_category(bot, update, user_data):
-    logging.info("categories_menu delete_category")
     user = update.message.from_user
     category_name = update.message.text
     #  Something goes wrong and we don't know category_type
     if "delete_category_type" not in user_data:
-        logging.debug("delete_category: category_type is not defined!")
+        logging.info("category_type is not defined!")
         update.message.reply_text("не получается определить тип категории, выбери еще раз желаемое действие",
                                   reply_markup=get_keyboard("main_menu"))
         clear_user_data(user_data, "categories_menu")
@@ -121,7 +117,6 @@ def delete_category(bot, update, user_data):
 
 
 def confirm_delete_category(bot, update, user_data):
-    logging.info("categories_menu confirm_delete_category")
     user = update.message.from_user
     choice = update.message.text
     #  Lets check whether everything is correct (category_name and category_type)
@@ -133,8 +128,10 @@ def confirm_delete_category(bot, update, user_data):
         #  user confirmed that he want to delete category
         if choice.lower() == "да":
             if data_manipulator.delete_category(user.id, category_name, category_type):
+                logging.info(f"category {category_name} deleted")
                 reply_text = f"категория {category_name} удалена! Что дальше?"
             else:
+                logging.info(f"couldn't delete category {category_name}")
                 reply_text = f"не получилось удалить категорию {category_name}"
             update.message.reply_text(reply_text, reply_markup=get_keyboard("main_menu"))
             clear_user_data(user_data, "categories_menu")
@@ -155,6 +152,7 @@ def confirm_delete_category(bot, update, user_data):
             update.message.reply_text(reply_text, reply_markup=get_keyboard("confirmation", one_time_keyboard=True))
             return "confirm_delete_category"
     else:
+            logging.info("delete_category_type is not in user_data")
             update.message.reply_text("не получается определить категорию, выбери еще раз желаемое действие",
                                       reply_markup=get_keyboard("main_menu"))
             clear_user_data(user_data, "categories_menu")

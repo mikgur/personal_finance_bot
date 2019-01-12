@@ -22,5 +22,5 @@ def run_bot():
     dp.add_handler(categories_menu.conversation)
     dp.add_handler(RegexHandler(r"^(Статистика)$", handlers.show_statistics))
     my_bot.start_polling()
-    logging.debug("pf_bot started...")
+    logging.info("pf_bot started...")
     my_bot.idle()

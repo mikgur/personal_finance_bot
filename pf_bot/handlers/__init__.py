@@ -1,4 +1,3 @@
-import logging
 from io import BytesIO
 
 import pandas as pd
@@ -13,7 +12,6 @@ from pf_model.utils import is_existing_user
 
 
 def start_chat(bot, update):
-    logging.debug("start_chat")
     user = update.message.from_user
     text = f"Привет, {user.first_name},"
     if is_existing_user(user.id):
