@@ -1,4 +1,5 @@
 import logging
+from collections import namedtuple
 
 from telegram.ext import (ConversationHandler, Filters, MessageHandler,
                           RegexHandler)
@@ -8,18 +9,19 @@ from pf_bot.utils import (clear_user_data, get_keyboard,
                           get_keyboard_from_list, make_re_template_for_menu)
 from pf_model import data_manipulator, data_observer
 
-action_choices = [
-                 "Расходы – Добавить категорию",
-                 "Расходы – Удалить категорию",
-                 "Доходы – Добавить категорию",
-                 "Доходы – Удалить категорию",
-                 "Назад"
-]
+Menu = namedtuple("Menu", ["expense_add", "expense_remove", "income_add", "income_remove", "back"])
+action_choices = Menu("Расходы – Добавить категорию",
+                      "Расходы – Удалить категорию",
+                      "Доходы – Добавить категорию",
+                      "Доходы – Удалить категорию",
+                      "Назад")
 
 
 def start(bot, update):
     update.message.reply_text("выбери, что именно нужно сделать",
-                              reply_markup=get_keyboard("categories_menu", one_time_keyboard=True)
+                              reply_markup=get_keyboard_from_list(list(action_choices),
+                                                                  cancel=False,
+                                                                  one_time_keyboard=True)
                               )
     return "menu_choice"
 
@@ -28,19 +30,21 @@ def menu_choice(bot, update, user_data):
     clear_user_data(user_data, "categories_menu")
     user = update.message.from_user
     choice = update.message.text
-    if choice == "Назад":
+    if choice == action_choices.back:
         update.message.reply_text(f"{user.first_name}, слушаю тебя", reply_markup=get_keyboard("main_menu"))
         clear_user_data(user_data, "categories_menu")
         return ConversationHandler.END
 
-    category_type, action = choice.split(" – ")
+    category_type = "income" if choice in [action_choices.income_add, action_choices.income_remove] else "expense"
+    action = "add" if choice in [action_choices.income_add, action_choices.expense_add] else "remove"
+
     categories = data_observer.get_all_category_names(user.id, category_type)
-    if action == "Удалить категорию":
+    if action == "remove":
         user_data["delete_category_type"] = category_type
         reply_text = "выберите категорию, которую хотите удалить:"
         update.message.reply_text(reply_text, reply_markup=get_keyboard_from_list(categories, one_time_keyboard=True))
         return "delete_category"
-    elif action == "Добавить категорию":
+    elif action == "add":
         user_data["add_category_type"] = category_type
         update.message.reply_text("какое название будет у новой категории?")
         return "add_category"
@@ -95,10 +99,12 @@ def delete_category(bot, update, user_data):
         return ConversationHandler.END
 
     #  User decided to cancel
-    if category_name == "Назад":
+    if category_name == action_choices.back:
         clear_user_data(user_data, "categories_menu")
         update.message.reply_text("выбери, что именно нужно сделать",
-                                  reply_markup=get_keyboard("categories_menu", one_time_keyboard=True)
+                                  reply_markup=get_keyboard_from_list(list(action_choices),
+                                                                      cancel=False,
+                                                                      one_time_keyboard=True)
                                   )
         return "menu_choice"
 
@@ -126,7 +132,7 @@ def confirm_delete_category(bot, update, user_data):
         category_type = user_data["delete_category_type"]
 
         #  user confirmed that he want to delete category
-        if choice.lower() == "да":
+        if choice.lower() == confirmation.yes.lower():
             if data_manipulator.delete_category(user.id, category_name, category_type):
                 logging.info(f"category {category_name} deleted")
                 reply_text = f"категория {category_name} удалена! Что дальше?"
@@ -138,7 +144,7 @@ def confirm_delete_category(bot, update, user_data):
             return ConversationHandler.END
 
         #  user cancel
-        elif choice.lower() == "нет":
+        elif choice.lower() == confirmation.no.lower():
             reply_text = "выберите категорию, которую хотите удалить:"
             categories = data_observer.get_all_category_names(user.id, user_data["delete_category_type"])
             update.message.reply_text(reply_text,
@@ -161,10 +167,13 @@ def confirm_delete_category(bot, update, user_data):
 
 conversation = ConversationHandler(
         entry_points=[
-            RegexHandler(make_re_template_for_menu(["Категории"]), start)
+            RegexHandler(make_re_template_for_menu([main_menu.categories]), start)
         ],
         states={
-            "menu_choice": [RegexHandler(make_re_template_for_menu(action_choices), menu_choice, pass_user_data=True)],
+            "menu_choice": [RegexHandler(make_re_template_for_menu(list(action_choices)),
+                                         menu_choice,
+                                         pass_user_data=True)
+                            ],
             "delete_category": [MessageHandler(Filters.text, delete_category, pass_user_data=True)],
             "confirm_delete_category": [MessageHandler(Filters.text, confirm_delete_category, pass_user_data=True)],
             "add_category": [MessageHandler(Filters.text, add_category, pass_user_data=True)]

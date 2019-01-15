@@ -2,6 +2,7 @@ import calendar
 import datetime
 import logging
 import re
+from collections import namedtuple
 
 from telegram import ReplyKeyboardMarkup
 
@@ -10,17 +11,18 @@ from pf_model import data_observer
 
 AMOUNT_PATTERN = r"(^|\s)\d+([.,]\d{1,2})?"
 
+Confirmation = namedtuple("Confirmation", "yes no")
+confirmation = Confirmation("Да", "Нет")
+
+MainMenu = namedtuple("MainManu", "input statistics categories accounts")
+main_menu = MainMenu("Ввести доход/расход", "Статистика", "Категории", "Счета")
+
 
 def get_keyboard(context="main_menu", one_time_keyboard=False):
     if context == "main_menu":
-        return ReplyKeyboardMarkup([["Ввести доход/расход", "Статистика"],
-                                    ["Категории", "Счета"]], resize_keyboard=True)
-    elif context == "categories_menu":
-        return ReplyKeyboardMarkup([["Расходы – Добавить категорию", "Расходы – Удалить категорию"],
-                                    ["Доходы – Добавить категорию", "Доходы – Удалить категорию"],
-                                    ["Назад"]], one_time_keyboard=one_time_keyboard, resize_keyboard=True)
+        return get_keyboard_from_list(list(main_menu), cancel=False)
     elif context == "confirmation":
-        return ReplyKeyboardMarkup([["Да", "Нет"]], one_time_keyboard=one_time_keyboard, resize_keyboard=True)
+        return ReplyKeyboardMarkup([list(confirmation)], one_time_keyboard=one_time_keyboard, resize_keyboard=True)
 
 
 def get_keyboard_from_list(names, number_of_rows=2, cancel=True, one_time_keyboard=False):
