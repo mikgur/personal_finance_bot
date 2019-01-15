@@ -18,7 +18,7 @@ action_choices = Menu("Расходы – Добавить категорию",
 
 
 def start(bot, update):
-    update.message.reply_text("выбери, что именно нужно сделать",
+    update.message.reply_text("Выбери, что именно нужно сделать",
                               reply_markup=get_keyboard_from_list(list(action_choices),
                                                                   cancel=False,
                                                                   one_time_keyboard=True)
@@ -41,12 +41,12 @@ def menu_choice(bot, update, user_data):
     categories = data_observer.get_all_category_names(user.id, category_type)
     if action == "remove":
         user_data["delete_category_type"] = category_type
-        reply_text = "выберите категорию, которую хотите удалить:"
+        reply_text = "Выберите категорию, которую хотите удалить:"
         update.message.reply_text(reply_text, reply_markup=get_keyboard_from_list(categories, one_time_keyboard=True))
         return "delete_category"
     elif action == "add":
         user_data["add_category_type"] = category_type
-        update.message.reply_text("какое название будет у новой категории?")
+        update.message.reply_text("Какое название будет у новой категории?")
         return "add_category"
 
 
@@ -93,7 +93,7 @@ def delete_category(bot, update, user_data):
     #  Something goes wrong and we don't know category_type
     if "delete_category_type" not in user_data:
         logging.info("category_type is not defined!")
-        update.message.reply_text("не получается определить тип категории, выбери еще раз желаемое действие",
+        update.message.reply_text("Не получается определить тип категории, выбери еще раз желаемое действие",
                                   reply_markup=get_keyboard("main_menu"))
         clear_user_data(user_data, "categories_menu")
         return ConversationHandler.END
@@ -101,7 +101,7 @@ def delete_category(bot, update, user_data):
     #  User decided to cancel
     if category_name == action_choices.back:
         clear_user_data(user_data, "categories_menu")
-        update.message.reply_text("выбери, что именно нужно сделать",
+        update.message.reply_text("Выбери, что именно нужно сделать",
                                   reply_markup=get_keyboard_from_list(list(action_choices),
                                                                       cancel=False,
                                                                       one_time_keyboard=True)
@@ -113,11 +113,11 @@ def delete_category(bot, update, user_data):
     categories = data_observer.get_all_category_names(user.id, user_data["delete_category_type"])
     if category_name in categories:
         user_data["delete_category_name"] = category_name
-        update.message.reply_text(f"уверен, что хочешь удалить {category_name}?",
+        update.message.reply_text(f"Уверен, что хочешь удалить {category_name}?",
                                   reply_markup=get_keyboard("confirmation", one_time_keyboard=True))
         return "confirm_delete_category"
     else:
-        update.message.reply_text(f"не могу найти {category_name}, выбери категорию при помощи клавиатуры",
+        update.message.reply_text(f"Не могу найти {category_name}, выбери категорию при помощи клавиатуры",
                                   reply_markup=get_keyboard_from_list(categories, one_time_keyboard=True))
         return "delete_category"
 
@@ -135,17 +135,17 @@ def confirm_delete_category(bot, update, user_data):
         if choice.lower() == confirmation.yes.lower():
             if data_manipulator.delete_category(user.id, category_name, category_type):
                 logging.info(f"category {category_name} deleted")
-                reply_text = f"категория {category_name} удалена! Что дальше?"
+                reply_text = f"Категория {category_name} удалена! Что дальше?"
             else:
                 logging.info(f"couldn't delete category {category_name}")
-                reply_text = f"не получилось удалить категорию {category_name}"
+                reply_text = f"Не получилось удалить категорию {category_name}"
             update.message.reply_text(reply_text, reply_markup=get_keyboard("main_menu"))
             clear_user_data(user_data, "categories_menu")
             return ConversationHandler.END
 
         #  user cancel
         elif choice.lower() == confirmation.no.lower():
-            reply_text = "выберите категорию, которую хотите удалить:"
+            reply_text = "Выберите категорию, которую хотите удалить:"
             categories = data_observer.get_all_category_names(user.id, user_data["delete_category_type"])
             update.message.reply_text(reply_text,
                                       reply_markup=get_keyboard_from_list(categories, one_time_keyboard=True)
@@ -154,12 +154,12 @@ def confirm_delete_category(bot, update, user_data):
         #  user reply is neither yes nor no - wrong answer
         else:
             category_name = user_data["delete_category_name"]
-            reply_text = f"не понимаю твой ответ. Ты уверен, что хочешь удалить категорию {category_name}?"
+            reply_text = f"Не понимаю твой ответ. Ты уверен, что хочешь удалить категорию {category_name}?"
             update.message.reply_text(reply_text, reply_markup=get_keyboard("confirmation", one_time_keyboard=True))
             return "confirm_delete_category"
     else:
             logging.info("delete_category_type is not in user_data")
-            update.message.reply_text("не получается определить категорию, выбери еще раз желаемое действие",
+            update.message.reply_text("Не получается определить категорию, выбери еще раз желаемое действие",
                                       reply_markup=get_keyboard("main_menu"))
             clear_user_data(user_data, "categories_menu")
             return ConversationHandler.END
