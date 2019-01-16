@@ -1,0 +1,35 @@
+{% extends "base.html" %}
+
+{% block content %}
+    <div class="row">
+        <div class="col">
+            <div class="text-center">
+                    <h2>Категории расходов</h2>
+            </div>
+        </div>
+    </div>
+    <br>
+    <table class="table">
+        <thead class="thead-light">
+            <tr>
+                <th scope="col">#</th>
+                <th scope="col">Название</th>
+                <th scope="col"></th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for category in categories_list %}
+                <tr>
+                    <th scope="row">{{ loop.index }}</th>
+                    <td>{{category }}</td>
+                    <td>
+                        <div class="btn-group" role="group" aria-label="Basic example">
+                                <button type="button" class="btn btn-secondary">Изменить</button>
+                                <button type="button" class="btn btn-secondary">Удалить</button>
+                            </div>
+                    </td>
+                </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+{% endblock %}

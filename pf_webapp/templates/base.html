@@ -11,32 +11,9 @@
     <title>Personal Finance bot</title>
   </head>
   <body>
+    {% include "menu.html" %}
     <div class="container">
-        <div class="row">
-            <div class="col">
-                <div class="text-center">
-                        <h1>Personal Finance bot</h1>
-                </div>
-            </div>
-        </div>
-        <br>
-        <div class="row">
-            <div class="col-2">
-                <form action="/" method="post">
-                    <button type="submit" class="btn btn-primary" name="menu_button" value="Categories">Категории расходов</button><br><br>
-                    <button type="submit" class="btn btn-primary" name="menu_button" value="Transactions">Транзакции</button><br>
-                </form>
-            </div>
-            <div class="col-1"></div>
-            <div class="col">
-                {% if active_info == "Categories" %}
-                    <h3>{{ user_name }}, твои категории:</h3>
-                    {% for category in categories_list %}
-                        <p>{{ category }}</p>
-                    {% endfor %}
-                {% endif %}
-            </div>
-        </div>
+        {% block content %}{% endblock %}
     </div>
 
     <!-- Optional JavaScript -->
