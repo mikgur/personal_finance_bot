@@ -1,12 +1,12 @@
-from flask import Flask, render_template, request, url_for
+from flask import Flask, render_template
 
-from pf_model import data_observer
 from pf_webapp.category.views import blueprint as category_blueprint
 from pf_webapp.user.views import blueprint as user_blueprint
 
 
 def create_app():
     app = Flask(__name__)
+    app.config.from_pyfile("config.py")
 
     app.register_blueprint(category_blueprint)
     app.register_blueprint(user_blueprint)
