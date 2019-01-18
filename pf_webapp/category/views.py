@@ -16,6 +16,11 @@ def index():
                            )
 
 
-@blueprint.route("/changebtn")
+@blueprint.route("/savebtn")
 def changebtn():
+    return "success"
+
+
+@blueprint.route("/deletebtn")
+def deletebtn():
     return "success"
