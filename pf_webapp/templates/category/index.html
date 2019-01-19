@@ -21,118 +21,22 @@
         <tbody>
             {% for category in categories_list %}
                 <tr>
-                    <td class = "align-middle" scope="row">{{ loop.index }}</th>
+                    <td class = "align-middle">
+                        <span id="number{{ loop.index }}">{{ loop.index }}</span></td>
                     <td class = "align-middle">
                         <span id="caption{{ loop.index }}">{{category }}</span></td>
                     <td class = "align-middle text-center">
-                        <button type="button" class="btn btn-secondary" id="left_btn{{ loop.index }}" onclick="change_save_category({{ loop.index }})">Изменить</button>
+                        <button type="button" class="btn btn-secondary" id="left_btn{{ loop.index }}" onclick="change_category.call(this)">Изменить</button>
                     </td>
                     <td class = "align-middle text-center">
-                        <button type="button" class="btn btn-secondary" id="right_btn{{ loop.index }}" onclick="delete_cancel_category({{ loop.index }})">Удалить</button>
+                        <button type="button" class="btn btn-secondary" id="right_btn{{ loop.index }}" onclick="delete_category.call(this)">Удалить</button>
                     </td>
                 </tr>
             {% endfor %}
         </tbody>
     </table>
     <div class="row">
-        <div class="col"><button type="button" class="btn btn-primary" id="add_btn" onclick="add_row()">Новая</button></div> 
+        <div class="col"><button type="button" class="btn btn-primary" id="add_btn" onclick="add_row()">Новая</button></div>
     </div>
-    <script>
-            var old_captions = {}
-
-            function change_save_category(num) {
-                var xhr = new XMLHttpRequest();
-                
-                var btnLeft = document.getElementById("left_btn" + num);
-                var btnRight = document.getElementById("right_btn" + num);
-                if (btnLeft.innerHTML == "Изменить") {
-                    var caption = document.getElementById("caption" + num);
-                    var text_input = document.createElement("input");
-                    text_input.type = "text";
-                    text_input.id = "input" + num;
-                    text_input.style = "width: 100%";
-                    text_input.value = caption.innerHTML;
-                    old_captions[num] = caption.innerHTML;
-                    caption.parentNode.replaceChild(text_input, caption);
-                    btnLeft.innerHTML = "Сохранить";
-                    btnRight.innerHTML = "Отмена";
-                } else if (btnLeft.innerHTML == "Сохранить") {
-                    xhr.open('GET', '/category/savebtn', true);
-                    xhr.onload = function() {
-                        var text_input = document.getElementById('input' + num)
-                        var caption = document.createElement("span");
-                        caption.id = "caption" + num
-                        caption.innerHTML = text_input.value;
-                        text_input.parentNode.replaceChild(caption, text_input);
-                        btnLeft.innerHTML = "Изменить";
-                        btnRight.innerHTML = "Удалить";
-                    }
-                    xhr.onerror = function() {
-                        alert('Ошибка ' + xhr.status + ': ' + xhr.statusText);
-                    }
-                    xhr.send();
-                }   
-            }
-
-            function delete_cancel_category(num) {
-                var btnLeft = document.getElementById("left_btn" + num);
-                var btnRight = document.getElementById("right_btn" + num);
-                var xhr = new XMLHttpRequest();
-                if (btnRight.innerHTML == "Удалить") {
-                    alert("Удаляем " + num);
-                    xhr.open('GET', '/category/deletebtn', true);
-                    xhr.onload = function() {
-                        
-                    }
-                    xhr.onerror = function() {
-                        alert('Ошибка ' + xhr.status + ': ' + xhr.statusText);
-                    }
-                    xhr.send();
-                } else if (btnRight.innerHTML == "Отмена") {
-                    var text_input = document.getElementById('input' + num);
-                    var caption = document.createElement("span");
-                    caption.id = "caption" + num;
-                    caption.innerHTML = old_captions[num];
-                    text_input.parentNode.replaceChild(caption, text_input);
-                    btnLeft.innerHTML = "Изменить";
-                    btnRight.innerHTML = "Удалить";
-                } 
-                
-            }
-
-            function add_row() {
-                var category_table = document.getElementById('category_table').getElementsByTagName('tbody')[0];
-                row_num = category_table.rows.length;
-                var new_row   = category_table.insertRow(row_num);
-                var html_ros_num = row_num + 1
-                new_row.innerHTML = '<td class = "align-middle" scope="row">' + html_ros_num + '</th>\
-                                     <td class = "align-middle">\
-                                            <input type = "text" style = "width: 100%" id = "input' + html_ros_num + '"></td>\
-                                     <td class = "align-middle text-center">\
-                                            <button type="button" class="btn btn-secondary" id="left_btn' + html_ros_num + '" onclick="change_save_category(' + html_ros_num + ')">Сохранить</button>\
-                                     </td>\
-                                     <td class = "align-middle text-center">\
-                                            <button type="button" class="btn btn-secondary" id="right_btn' + html_ros_num + '" onclick="delete_cancel_category(' + html_ros_num + ')">Отмена</button>\
-                                     </td>'
-                
-            }
-
-    </script>
+    <script src="{{url_for('static', filename='category/index.js')}}"></script>
 {% endblock %}
-
-var new_cell  = new_row.insertCell(0);
-var col_html = "<td class = 'align-middle' scope='row'>" + row_num + "</th>";
-new_cell.innerHTML = col_html;
-
-new_cell  = new_row.insertCell(1);
-col_html = "<input type='text' style='width: 10%'></input>";
-
-new_cell.innerHTML = col_html;
-
-var new_cell  = new_row.insertCell(2);
-col_html = '<button type="button" class="btn btn-secondary" id="left_btn" onclick="change_save_category()">Изменить</button>'
-new_cell.innerHTML = col_html;
-
-var new_cell  = new_row.insertCell(3);
-col_html = '<button type="button" class="btn btn-secondary" id="right_btn" onclick="delete_cancel_category">Удалить</button>'
-new_cell.innerHTML = col_html;
