@@ -26,7 +26,7 @@
                     <td class = "align-middle">
                         <span id="caption{{ loop.index }}">{{category }}</span></td>
                     <td class = "align-middle text-center">
-                        <button type="button" class="btn btn-secondary" id="left_btn{{ loop.index }}" onclick="change_category.call(this)">Изменить</button>
+                        <button type="button" class="btn btn-secondary" id="left_btn{{ loop.index }}" onclick="rename_category.call(this)">Изменить</button>
                     </td>
                     <td class = "align-middle text-center">
                         <button type="button" class="btn btn-secondary" id="right_btn{{ loop.index }}" onclick="delete_category.call(this)">Удалить</button>
@@ -36,7 +36,7 @@
         </tbody>
     </table>
     <div class="row">
-        <div class="col"><button type="button" class="btn btn-primary" id="add_btn" onclick="add_row()">Новая</button></div>
+        <div class="col"><button type="button" class="btn btn-primary" id="add_btn" onclick="add_new_row()">Новая</button></div>
     </div>
     <script src="{{url_for('static', filename='category/index.js')}}"></script>
 {% endblock %}

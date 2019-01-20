@@ -5,8 +5,9 @@ import logging
 
 from sqlalchemy.orm import sessionmaker
 
-from pf_bot.exceptions import PFBWrongCategoryType
+from pf_bot.exceptions import PFBWrongCategoryType, PFBCategoryAlreadyExist
 
+from .data_observer import get_all_category_names
 from .model import (Account, AccountType, Category, CategoryType, Currency,
                     Transaction, TransactionType, User, db)
 from .utils import get_category_type_by_alias
@@ -40,6 +41,9 @@ def add_category(name, user_id, category_type_name="expense"):
     category_type_name - name of type
     '''
     try:
+        name = name.capitalize()
+        if name in get_all_category_names(user_id, category_type_name, "active"):
+            raise PFBCategoryAlreadyExist
         Session = sessionmaker(bind=db)
         session = Session()
 
@@ -60,6 +64,9 @@ def add_category(name, user_id, category_type_name="expense"):
     except PFBWrongCategoryType:
         logging.error("Wrong category type is used to access database")
         return False
+    except PFBCategoryAlreadyExist:
+        logging.error("Trying to add category which already exist")
+        raise
     except Exception as exc:
         logging.error(f'Error while adding category: {exc}')
         return False
@@ -140,6 +147,40 @@ def delete_category(user_id, category_name, category_type_name):
     except PFBWrongCategoryType:
         logging.error("Wrong category type is used to access database")
         return False
+    except Exception as exc:
+        logging.error(f"Cannot delete category: {exc}")
+        return False
+
+
+def rename_category(user_id, new_category_name, old_category_name, category_type_name):
+    logging_text = (f"rename_category user: {user_id} new_category_name: {new_category_name}"
+                    + "old_category_name: {old_category_name} type: {category_type_name}")
+    logging.info(logging_text)
+    try:
+        new_category_name = new_category_name.capitalize()
+        if new_category_name in get_all_category_names(user_id, category_type_name, "active"):
+            raise PFBCategoryAlreadyExist
+        Session = sessionmaker(bind=db)
+        session = Session()
+
+        user = session.query(User).filter(User.user_id == user_id).one()
+        query = session.query(Category).filter(Category.user == user)
+
+        category_type_name_db = get_category_type_by_alias(category_type_name)
+        category_type = session.query(CategoryType).filter(CategoryType.name == category_type_name_db).one()
+        #  Search for category which needs to be renamed
+        query = query.filter(Category.type == category_type, Category.name == old_category_name)
+        #  Check that there is only one object in query
+        category = query.one()
+        category.name = new_category_name
+        session.commit()
+        return True
+    except PFBWrongCategoryType:
+        logging.error("Wrong category type is used to access database")
+        return False
+    except PFBCategoryAlreadyExist:
+        logging.error("Trying to add category which already exist")
+        raise
     except Exception as exc:
         logging.error(f"Cannot delete category: {exc}")
         return False
