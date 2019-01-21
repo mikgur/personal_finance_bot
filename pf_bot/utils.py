@@ -42,6 +42,11 @@ def get_keyboard_from_list(names, number_of_rows=2, cancel=True, one_time_keyboa
 
 
 def make_re_template_for_menu(choices):
+    """
+    Function create a regex for a list of menu choices.
+    e.g. for a list of choices = ["option1", "option2", "option3"]
+    resulting regex will only accept "option1" or "option2" or "option3"
+    """
     return f"^({')|('.join(choices)})$"
 
 

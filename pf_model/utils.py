@@ -24,4 +24,4 @@ def get_category_type_by_alias(alias):
     elif alias.lower() in ["income", "доходы"]:
         return "income"
     else:
-        raise WrongCategoryType
+        raise WrongCategoryType(f"There is no such category class in database: {alias}")
