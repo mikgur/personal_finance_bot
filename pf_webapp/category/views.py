@@ -43,10 +43,12 @@ def rename_category():
     user_id = 10179437
     category = request.get_json()
     try:
-        result = data_manipulator.rename_category(user_id, category["new"], category["old"], "expense")
+        data_manipulator.rename_category(user_id, category["new"], category["old"], "expense")
     except PFBCategoryAlreadyExist:
         return "already_exist"
-    return "success" if result else "failure"
+    except Exception:
+        return "failure"
+    return "success"
 
 
 @blueprint.route("/update")

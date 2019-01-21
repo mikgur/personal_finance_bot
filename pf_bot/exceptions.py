@@ -16,3 +16,7 @@ class PFBWrongCategoryType(PFBException):
 
 class PFBCategoryAlreadyExist(PFBException):
     pass
+
+
+class PFBCategoryTypeNotInUserData(PFBException):
+    pass

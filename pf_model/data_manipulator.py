@@ -174,13 +174,12 @@ def rename_category(user_id, new_category_name, old_category_name, category_type
         category = query.one()
         category.name = new_category_name
         session.commit()
-        return True
     except PFBWrongCategoryType:
         logging.error("Wrong category type is used to access database")
-        return False
+        raise
     except PFBCategoryAlreadyExist:
         logging.error("Trying to add category which already exist")
         raise
     except Exception as exc:
         logging.error(f"Cannot delete category: {exc}")
-        return False
+        raise
