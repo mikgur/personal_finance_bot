@@ -1,22 +1,18 @@
-class PFBException(Exception):
+class NoCurrencies(Exception):
     pass
 
 
-class PFBNoCurrencies(PFBException):
+class WrongCategory(Exception):
     pass
 
 
-class PFBWrongCategory(PFBException):
+class WrongCategoryType(Exception):
     pass
 
 
-class PFBWrongCategoryType(PFBException):
+class CategoryAlreadyExist(Exception):
     pass
 
 
-class PFBCategoryAlreadyExist(PFBException):
-    pass
-
-
-class PFBCategoryTypeNotInUserData(PFBException):
+class CategoryTypeNotInUserData(Exception):
     pass

@@ -2,25 +2,27 @@ import calendar
 import datetime
 import logging
 import re
+from collections import namedtuple
 
 from telegram import ReplyKeyboardMarkup
 
-from pf_bot.exceptions import PFBNoCurrencies, PFBWrongCategory
+from pf_bot.exceptions import NoCurrencies, WrongCategory
 from pf_model import data_observer
 
 AMOUNT_PATTERN = r"(^|\s)\d+([.,]\d{1,2})?"
 
+Confirmation = namedtuple("Confirmation", "yes no")
+confirmation = Confirmation("Да", "Нет")
+
+MainMenu = namedtuple("MainManu", "input statistics categories accounts")
+main_menu = MainMenu("Ввести доход/расход", "Статистика", "Категории", "Счета")
+
 
 def get_keyboard(context="main_menu", one_time_keyboard=False):
     if context == "main_menu":
-        return ReplyKeyboardMarkup([["Ввести доход/расход", "Статистика"],
-                                    ["Категории", "Счета"]], resize_keyboard=True)
-    elif context == "categories_menu":
-        return ReplyKeyboardMarkup([["Расходы - Добавить категорию", "Расходы - Удалить категорию"],
-                                    ["Доходы - Добавить категорию", "Доходы - Удалить категорию"],
-                                    ["Назад"]], one_time_keyboard=one_time_keyboard, resize_keyboard=True)
+        return get_keyboard_from_list(list(main_menu), cancel=False)
     elif context == "confirmation":
-        return ReplyKeyboardMarkup([["Да", "Нет"]], one_time_keyboard=one_time_keyboard, resize_keyboard=True)
+        return ReplyKeyboardMarkup([list(confirmation)], one_time_keyboard=one_time_keyboard, resize_keyboard=True)
 
 
 def get_keyboard_from_list(names, number_of_rows=2, cancel=True, one_time_keyboard=False):
@@ -40,6 +42,11 @@ def get_keyboard_from_list(names, number_of_rows=2, cancel=True, one_time_keyboa
 
 
 def make_re_template_for_menu(choices):
+    """
+    Function create a regex for a list of menu choices.
+    e.g. for a list of choices = ["option1", "option2", "option3"]
+    resulting regex will only accept "option1" or "option2" or "option3"
+    """
     return f"^({')|('.join(choices)})$"
 
 
@@ -69,7 +76,7 @@ def parse_transaction(line, user_id):
         #  Search for transaction amount and currency
         amount_mo = re.search(amount_with_currency_pattern(), text)
         transaction_amount_currency = amount_mo.group().strip()
-    except PFBNoCurrencies:
+    except NoCurrencies:
         logging.error("There are no currencies in database")
         raise
 
@@ -96,7 +103,7 @@ def parse_transaction(line, user_id):
             transaction_type = "income"
         else:
             logging.debug("при вводе транзакции указана неверная категория")
-            raise PFBWrongCategory
+            raise WrongCategory
 
     # Search for account
     account_list = [account for account in data_observer.get_all_account_names(user_id) if account.lower() in text]
@@ -118,7 +125,7 @@ def amount_with_currency_pattern():
     logging.debug("building transaction pattern")
     currencies = data_observer.get_all_currencies_shortnames()
     if not currencies:
-        raise PFBNoCurrencies
+        raise NoCurrencies
     currency_variants = [currency.capitalize() for currency in currencies]
     currency_variants.extend([currency.upper() for currency in currencies])
     currencies.extend(currency_variants)

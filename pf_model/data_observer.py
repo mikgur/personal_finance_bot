@@ -5,7 +5,7 @@ import logging
 from sqlalchemy import func
 from sqlalchemy.orm import sessionmaker
 
-from pf_bot.exceptions import PFBWrongCategoryType
+from pf_bot.exceptions import WrongCategoryType
 
 from .model import (Account, AccountType, Category, CategoryType, Currency,
                     Transaction, User, db)
@@ -48,7 +48,7 @@ def get_all_category_names(user_id, category_type_name="expense", status="active
             elif status == "deleted":
                 query = query.filter(Category.is_deleted.is_(True))
         return [cat.name for cat in query.all()]
-    except PFBWrongCategoryType:
+    except WrongCategoryType:
         logging.error("Wrong category type is used to access database")
         return []
     except Exception as exc:

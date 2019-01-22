@@ -2,7 +2,7 @@ import logging
 
 from sqlalchemy.orm import sessionmaker
 
-from pf_bot.exceptions import PFBWrongCategoryType
+from pf_bot.exceptions import WrongCategoryType
 from .model import User, db
 
 
@@ -24,4 +24,4 @@ def get_category_type_by_alias(alias):
     elif alias.lower() in ["income", "доходы"]:
         return "income"
     else:
-        raise PFBWrongCategoryType
+        raise WrongCategoryType(f"There is no such category class in database: {alias}")

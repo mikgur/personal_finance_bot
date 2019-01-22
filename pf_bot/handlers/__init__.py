@@ -1,4 +1,3 @@
-import logging
 from io import BytesIO
 
 import pandas as pd
@@ -6,14 +5,13 @@ import matplotlib
 matplotlib.use("Agg") # NOQA
 import seaborn as sns
 
-from pf_bot.exceptions import PFBNoCurrencies, PFBWrongCategory
+from pf_bot.exceptions import NoCurrencies, WrongCategory
 from pf_bot.utils import get_keyboard, month_edges, parse_transaction
 from pf_model import data_manipulator, data_observer
 from pf_model.utils import is_existing_user
 
 
 def start_chat(bot, update):
-    logging.debug("start_chat")
     user = update.message.from_user
     text = f"Привет, {user.first_name},"
     if is_existing_user(user.id):
@@ -40,10 +38,10 @@ def add_transaction(bot, update):
         transaction = parse_transaction(update.message.text, user.id)
         data_manipulator.add_transaction(transaction, user.id)
         update.message.reply_text("Запись сделана!")
-    except PFBNoCurrencies:
+    except NoCurrencies:
         update.message.reply_text("В базе данных не найдено ни одной валюты. Нужно добавить хотя бы одну валюту, \
 перед вводом транзакций")
-    except PFBWrongCategory:
+    except WrongCategory:
         update.message.reply_text("Не могу распознать категорию")
 
 
