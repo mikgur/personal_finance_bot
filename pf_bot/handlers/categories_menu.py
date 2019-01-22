@@ -3,6 +3,7 @@ import logging
 from telegram.ext import (ConversationHandler, Filters, MessageHandler,
                           RegexHandler)
 
+from pf_bot.exceptions import PFBCategoryAlreadyExist, PFBCategoryTypeNotInUserData
 from pf_bot.utils import (clear_user_data, get_keyboard,
                           get_keyboard_from_list, make_re_template_for_menu)
 from pf_model import data_manipulator, data_observer
@@ -51,29 +52,38 @@ def add_category(bot, update, user_data):
     logging.info("categories_menu add_category")
     user = update.message.from_user
     new_category = update.message.text.capitalize()
-    if "add_category_type" not in user_data:
+
+    try:
+        if "add_category_type" not in user_data:
+            raise PFBCategoryTypeNotInUserData
+        category_added = data_manipulator.add_category(new_category, user.id, user_data["add_category_type"])
+
+    except PFBCategoryTypeNotInUserData:
         logging.debug("add_category: category_type is not defined!")
         update.message.reply_text("не получается определить тип категории, выбери еще раз желаемое действие",
                                   reply_markup=get_keyboard("main_menu"))
         clear_user_data(user_data, "categories_menu")
         return ConversationHandler.END
-    if new_category in data_observer.get_all_category_names(user.id, user_data["add_category_type"], status="active"):
+
+    except PFBCategoryAlreadyExist:
         reply_text = "Такая категория уже существует, кстати, вот список всех категорий, которые у тебя есть:"
+
         for i, category in enumerate(sorted(data_observer.get_all_category_names(user.id,
                                                                                  user_data["add_category_type"],
                                                                                  status="active"))):
             reply_text = f"{reply_text}\n{i+1}. {category}"
+
         reply_text = f"{reply_text}\n Введи другое название"
         update.message.reply_text(reply_text)
         return "add_category"
+
+    if category_added:
+        reply_text = f"Категория {new_category} добавлена!"
     else:
-        if data_manipulator.add_category(new_category, user.id, user_data["add_category_type"]):
-            reply_text = f"Категория {new_category} добавлена!"
-        else:
-            reply_text = f"Не получилось добавить категорию {new_category}"
-        update.message.reply_text(reply_text, reply_markup=get_keyboard("main_menu"))
-        clear_user_data(user_data, "categories_menu")
-        return ConversationHandler.END
+        reply_text = f"Не получилось добавить категорию {new_category}"
+    update.message.reply_text(reply_text, reply_markup=get_keyboard("main_menu"))
+    clear_user_data(user_data, "categories_menu")
+    return ConversationHandler.END
 
 
 def delete_category(bot, update, user_data):

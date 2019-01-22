@@ -1,0 +1,42 @@
+{% extends "base.html" %}
+
+{% block content %}
+    <div class="row">
+        <div class="col">
+            <div class="text-center">
+                    <h2>Категории расходов</h2>
+            </div>
+        </div>
+    </div>
+    <br>
+    <table class="table table-bordered" id="category_table">
+        <thead class="thead-light">
+            <tr>
+                <th scope="col" style="width: 5%">#</th>
+                <th scope="col" style="width: 73%">Название</th>
+                <th scope="col" style="width: 12%"></th>
+                <th scope="col" style="width: 10%"></th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for category in categories_list %}
+                <tr>
+                    <td class = "align-middle">
+                        <span id="number{{ loop.index }}">{{ loop.index }}</span></td>
+                    <td class = "align-middle">
+                        <span id="caption{{ loop.index }}">{{category }}</span></td>
+                    <td class = "align-middle text-center">
+                        <button type="button" class="btn btn-secondary" id="left_btn{{ loop.index }}" onclick="rename_category.call(this)">Изменить</button>
+                    </td>
+                    <td class = "align-middle text-center">
+                        <button type="button" class="btn btn-secondary" id="right_btn{{ loop.index }}" onclick="delete_category.call(this)">Удалить</button>
+                    </td>
+                </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+    <div class="row">
+        <div class="col"><button type="button" class="btn btn-primary" id="add_btn" onclick="add_new_row()">Новая</button></div>
+    </div>
+    <script src="{{url_for('static', filename='category/index.js')}}"></script>
+{% endblock %}

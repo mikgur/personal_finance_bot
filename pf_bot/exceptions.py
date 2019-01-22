@@ -12,3 +12,11 @@ class PFBWrongCategory(PFBException):
 
 class PFBWrongCategoryType(PFBException):
     pass
+
+
+class PFBCategoryAlreadyExist(PFBException):
+    pass
+
+
+class PFBCategoryTypeNotInUserData(PFBException):
+    pass
