@@ -5,7 +5,7 @@ import logging
 
 from sqlalchemy.orm import sessionmaker
 
-from pf_bot.exceptions import PFBWrongCategoryType, PFBCategoryAlreadyExist
+from pf_bot.exceptions import WrongCategoryType, CategoryAlreadyExist
 
 from .data_observer import get_all_category_names
 from .model import (Account, AccountType, Category, CategoryType, Currency,
@@ -43,7 +43,7 @@ def add_category(name, user_id, category_type_name="expense"):
     try:
         name = name.capitalize()
         if name in get_all_category_names(user_id, category_type_name, "active"):
-            raise PFBCategoryAlreadyExist
+            raise CategoryAlreadyExist
         Session = sessionmaker(bind=db)
         session = Session()
 
@@ -64,7 +64,7 @@ def add_category(name, user_id, category_type_name="expense"):
     except WrongCategoryType:
         logging.error("Wrong category type is used to access database")
         return False
-    except PFBCategoryAlreadyExist:
+    except CategoryAlreadyExist:
         logging.error("Trying to add category which already exist")
         raise
     except Exception as exc:
@@ -158,7 +158,7 @@ def rename_category(user_id, new_category_name, old_category_name, category_type
     try:
         new_category_name = new_category_name.capitalize()
         if new_category_name in get_all_category_names(user_id, category_type_name, "active"):
-            raise PFBCategoryAlreadyExist
+            raise CategoryAlreadyExist
         Session = sessionmaker(bind=db)
         session = Session()
 
@@ -173,10 +173,10 @@ def rename_category(user_id, new_category_name, old_category_name, category_type
         category = query.one()
         category.name = new_category_name
         session.commit()
-    except PFBWrongCategoryType:
+    except WrongCategoryType:
         logging.error("Wrong category type is used to access database")
         raise
-    except PFBCategoryAlreadyExist:
+    except CategoryAlreadyExist:
         logging.error("Trying to add category which already exist")
         raise
     except Exception as exc:

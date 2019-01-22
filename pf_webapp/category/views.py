@@ -3,7 +3,7 @@ import json
 from flask import Blueprint, render_template, request
 
 from pf_model import data_observer, data_manipulator
-from pf_bot.exceptions import PFBCategoryAlreadyExist
+from pf_bot.exceptions import CategoryAlreadyExist
 
 blueprint = Blueprint("category", __name__, url_prefix="/category")
 
@@ -33,7 +33,7 @@ def add_new_category():
     new_category = request.get_json()
     try:
         result = data_manipulator.add_category(new_category, user_id, "expense")
-    except PFBCategoryAlreadyExist:
+    except CategoryAlreadyExist:
         return "already_exist"
     return "success" if result else "failure"
 
@@ -44,7 +44,7 @@ def rename_category():
     category = request.get_json()
     try:
         data_manipulator.rename_category(user_id, category["new"], category["old"], "expense")
-    except PFBCategoryAlreadyExist:
+    except CategoryAlreadyExist:
         return "already_exist"
     except Exception:
         return "failure"

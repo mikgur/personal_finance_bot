@@ -4,9 +4,10 @@ from collections import namedtuple
 from telegram.ext import (ConversationHandler, Filters, MessageHandler,
                           RegexHandler)
 
-from pf_bot.exceptions import PFBCategoryAlreadyExist, PFBCategoryTypeNotInUserData
-from pf_bot.utils import (clear_user_data, get_keyboard,
-                          get_keyboard_from_list, make_re_template_for_menu)
+from pf_bot.exceptions import CategoryAlreadyExist, CategoryTypeNotInUserData
+from pf_bot.utils import (clear_user_data, confirmation, get_keyboard,
+                          get_keyboard_from_list, main_menu,
+                          make_re_template_for_menu)
 from pf_model import data_manipulator, data_observer
 
 Menu = namedtuple("Menu", ["expense_add", "expense_remove", "income_add", "income_remove", "back"])
@@ -56,17 +57,24 @@ def add_category(bot, update, user_data):
 
     try:
         if "add_category_type" not in user_data:
-            raise PFBCategoryTypeNotInUserData
+            raise CategoryTypeNotInUserData
         category_added = data_manipulator.add_category(new_category, user.id, user_data["add_category_type"])
+        if category_added:
+            reply_text = f"Категория {new_category} добавлена!"
+        else:
+            reply_text = f"Не получилось добавить категорию {new_category}"
+        update.message.reply_text(reply_text, reply_markup=get_keyboard("main_menu"))
+        clear_user_data(user_data, "categories_menu")
+        return ConversationHandler.END
 
-    except PFBCategoryTypeNotInUserData:
+    except CategoryTypeNotInUserData:
         logging.debug("add_category: category_type is not defined!")
         update.message.reply_text("не получается определить тип категории, выбери еще раз желаемое действие",
                                   reply_markup=get_keyboard("main_menu"))
         clear_user_data(user_data, "categories_menu")
         return ConversationHandler.END
 
-    except PFBCategoryAlreadyExist:
+    except CategoryAlreadyExist:
         reply_text = "Такая категория уже существует, кстати, вот список всех категорий, которые у тебя есть:"
 
         for i, category in enumerate(sorted(data_observer.get_all_category_names(user.id,
@@ -77,14 +85,6 @@ def add_category(bot, update, user_data):
         reply_text = f"{reply_text}\n Введи другое название"
         update.message.reply_text(reply_text)
         return "add_category"
-
-    if category_added:
-        reply_text = f"Категория {new_category} добавлена!"
-    else:
-        reply_text = f"Не получилось добавить категорию {new_category}"
-    update.message.reply_text(reply_text, reply_markup=get_keyboard("main_menu"))
-    clear_user_data(user_data, "categories_menu")
-    return ConversationHandler.END
 
 
 def delete_category(bot, update, user_data):

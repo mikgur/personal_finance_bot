@@ -10,9 +10,9 @@ class WrongCategoryType(Exception):
     pass
 
 
-class PFBCategoryAlreadyExist(PFBException):
+class CategoryAlreadyExist(Exception):
     pass
 
 
-class PFBCategoryTypeNotInUserData(PFBException):
+class CategoryTypeNotInUserData(Exception):
     pass
