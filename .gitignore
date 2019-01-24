@@ -6,3 +6,4 @@ setup.cfg
 pf_bot.log
 .DS_Store
 pf_webapp/config.py
+run.bat
