@@ -1,13 +1,37 @@
 {% extends "base.html" %}
 
 {% block content %}
+    <h1>Вход</h1>
     <div class="row">
-        <div class="col">
-            <div class="text-center">
-                    <form action="/" method="post">
-                        <button type="submit" class="btn btn-primary" name="menu_button" value="SENDBOT">Отправить</button><br>
-                    </form>
-            </div>
+        <div class="col-4">
+            {% with messages = get_flashed_messages() %}
+                {% if messages %}
+                <div class="alert alert-warning" role="alert">
+                    {% for message in messages %}
+                        {{ message }}<br>
+                    {% endfor %}
+                </div>
+                {% endif %}
+            {% endwith %}
+            <form action= "{{ url_for('user.process_login') }}" method="POST">
+                {{ form.hidden_tag() }}
+                <div class="form-group">
+                    {{ form.username.label }}
+                    {{ form.username() }}
+                </div>
+                <div class="form-group">
+                    {{ form.password.label }}
+                    {{ form.password() }}
+                </div>
+                <div class="form-group form-check">
+                    {{ form.remember_me() }}
+                    {{ form.remember_me.label(class_="form-check-label") }}
+                </div>
+                <button type="button" class="btn btn-primary">{{ form.submit() }}</button>
+            </form>
+        </div>
+        <div class="col-8">
+
         </div>
     </div>
-{% endblock %}
+    {% endblock %}
