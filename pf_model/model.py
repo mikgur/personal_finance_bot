@@ -49,6 +49,9 @@ class User(base):
     id = Column(Integer, primary_key=True, autoincrement=True)
     user_id = Column(Integer, nullable=False)
     user_name = Column(String(60), nullable=False)
+    telegram_id = Column(String(60), nullable=False)
+    otc = Column(String(60))
+    password = Column(String(60))
 
     accounts = relationship("Account", back_populates="user")
     transactions = relationship("Transaction", back_populates="user")

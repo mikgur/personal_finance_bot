@@ -140,3 +140,7 @@ def clear_user_data(user_data, conversation="all"):
         for key in ["delete_category_name", "delete_category_type", "add_category_type"]:
             if key in user_data:
                 del user_data[key]
+
+
+def send_otc_code(telegram_id):
+    pass
