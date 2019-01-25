@@ -2,8 +2,8 @@ import json
 
 from flask import Blueprint, render_template, request
 
-from pf_model import data_observer, data_manipulator
-from pf_bot.exceptions import CategoryAlreadyExist
+from pf_model import data_manipulator, data_observer
+from pf_model.exceptions import CategoryAlreadyExist
 
 blueprint = Blueprint("category", __name__, url_prefix="/category")
 

@@ -6,8 +6,8 @@ from collections import namedtuple
 
 from telegram import ReplyKeyboardMarkup
 
-from pf_bot.exceptions import NoCurrencies, WrongCategory
 from pf_model import data_observer
+from pf_model.exceptions import NoCurrencies, WrongCategory
 
 AMOUNT_PATTERN = r"(^|\s)\d+([.,]\d{1,2})?"
 
@@ -140,7 +140,3 @@ def clear_user_data(user_data, conversation="all"):
         for key in ["delete_category_name", "delete_category_type", "add_category_type"]:
             if key in user_data:
                 del user_data[key]
-
-
-def send_otc_code(telegram_id):
-    pass

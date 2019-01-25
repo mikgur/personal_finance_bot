@@ -1,7 +1,16 @@
+import logging
+
 from flask import Flask, render_template
 
 from pf_webapp.category.views import blueprint as category_blueprint
 from pf_webapp.user.views import blueprint as user_blueprint
+
+
+logging.basicConfig(format='%(name)s - %(levelname)s - %(message)s',
+                    level=logging.INFO,
+                    filename='pf_webapp.log'
+                    )
+logging.debug("Starting pf_webapp")
 
 
 def create_app():

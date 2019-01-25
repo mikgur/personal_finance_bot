@@ -50,8 +50,8 @@ class User(base):
     user_id = Column(Integer, nullable=False)
     user_name = Column(String(60), nullable=False)
     telegram_id = Column(String(60), nullable=False)
-    otc = Column(String(60))
-    password = Column(String(60))
+    otc = Column(String(128))
+    password = Column(String(128))
 
     accounts = relationship("Account", back_populates="user")
     transactions = relationship("Transaction", back_populates="user")

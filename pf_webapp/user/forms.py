@@ -7,13 +7,17 @@ class LoginForm(FlaskForm):
     username = StringField("Имя пользователя", validators=[DataRequired()], render_kw={"class": "form-control"})
     password = PasswordField("Пароль", validators=[DataRequired()], render_kw={"class": "form-control"})
     remember_me = BooleanField("Запомнить меня", default=True, render_kw={"class": "form-check-input"})
-    submit = SubmitField("Отправить", render_kw={"class": "btn btn-primary"})
+    submit = SubmitField("Войти", render_kw={"class": "btn btn-primary"})
 
 
 class RegistrationForm(FlaskForm):
-    username = StringField("Имя пользователя", validators=[DataRequired()], render_kw={"class": "form-control"})
+    username = StringField("telegram id", validators=[DataRequired()], render_kw={"class": "form-control"})
     email = StringField("e-mail", validators=[DataRequired(), Email()], render_kw={"class": "form-control"})
-    bot_code = StringField("Одноразовый код", validators=[DataRequired(), Email()], render_kw={"class": "form-control"})
+    bot_code = StringField("Одноразовый код",
+                           validators=[DataRequired(), Email()],
+                           render_kw={"class": "form-control"})
     password = PasswordField("Пароль", validators=[DataRequired()], render_kw={"class": "form-control"})
-    password2 = PasswordField("Повторите пароль", validators=[DataRequired(), EqualTo("password")], render_kw={"class": "form-control"})
-    submit = SubmitField("Отправить", render_kw={"class": "btn btn-primary"})
+    password2 = PasswordField("Повторите пароль",
+                              validators=[DataRequired(), EqualTo("password")],
+                              render_kw={"class": "form-control"})
+    submit = SubmitField("Зарегистрироваться", render_kw={"class": "btn btn-primary"})

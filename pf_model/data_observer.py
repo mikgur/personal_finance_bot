@@ -4,9 +4,9 @@ import logging
 
 from sqlalchemy import func
 from sqlalchemy.orm import sessionmaker
+from sqlalchemy.orm.exc import MultipleResultsFound, NoResultFound
 
-from pf_bot.exceptions import WrongCategoryType
-
+from .exceptions import UserNotFoundOrMultipleUsers, WrongCategoryType
 from .model import (Account, AccountType, Category, CategoryType, Currency,
                     Transaction, User, db)
 from .utils import get_category_type_by_alias
@@ -66,6 +66,18 @@ def get_all_currencies_shortnames():
     except Exception as exc:
         logging.error(f"Cannot get currencies list from database: {exc}")
         return []
+
+
+def get_user_chat_id(telegram_id):
+    try:
+        Session = sessionmaker(bind=db)
+        session = Session()
+        user = session.query(User).filter(User.telegram_id == telegram_id).one()
+    except (NoResultFound, MultipleResultsFound) as exc:
+        logging.error(f"Cannot get user from database: {exc}")
+        raise UserNotFoundOrMultipleUsers
+
+    return user.user_id
 
 
 def statistics_for_period_by_category(user_id, period, category_type_name="expense"):

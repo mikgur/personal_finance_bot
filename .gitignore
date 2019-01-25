@@ -8,3 +8,4 @@ pf_bot.log
 pf_webapp/config.py
 run.bat
 run_web.sh
+pf_webapp.log

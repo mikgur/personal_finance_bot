@@ -1,6 +1,8 @@
-from flask import Blueprint, render_template
+from flask import Blueprint, render_template, request
 
+from pf_model.exceptions import UserNotFoundOrMultipleUsers
 from pf_webapp.user.forms import LoginForm, RegistrationForm
+from utils import send_otc
 
 blueprint = Blueprint("user", __name__, url_prefix="/user")
 
@@ -24,4 +26,13 @@ def register():
 
 @blueprint.route("/process-reg", methods=["POST"])
 def process_reg():
+    return "Success"
+
+
+@blueprint.route("/request-otc", methods=["POST"])
+def request_otc():
+    try:
+        send_otc(request.get_json())
+    except UserNotFoundOrMultipleUsers:
+        return "Wrong_telegram_id"
     return "Success"

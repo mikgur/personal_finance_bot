@@ -2,7 +2,7 @@ import logging
 
 from sqlalchemy.orm import sessionmaker
 
-from pf_bot.exceptions import WrongCategoryType
+from .exceptions import WrongCategoryType
 from .model import User, db
 
 

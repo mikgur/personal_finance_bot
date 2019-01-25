@@ -13,7 +13,7 @@
         <h1>Регистрация</h1>
         <div class="row">
             <div class="col-4">
-                <form action= "{{ url_for('user.process_reg') }}" method="POST">
+                <form name="registration_form" action= "{{ url_for('user.process_reg') }}" method="POST">
                     {{ form.hidden_tag() }}
                         <div class="form-group">
                             {{ form.username.label }}
@@ -30,10 +30,10 @@
                                     {{ form.bot_code() }}
                                 </div>
                                 <div class="form col-4">
-                                    <button type="button" class="btn btn-secondary">Получить</button>
+                                    <button type="button" class="btn btn-secondary" onclick="request_otc()">Отправить код</button>
                                 </div>
                             </div>
-                            <small id="oneTimeCodeHelp" class="form-text text-muted">Этот код можно получить у телеграм бота</small>
+                            <small id="oneTimeCodeHelp" class="form-text text-muted">Этот код можно также получить у телеграм бота, используя команду /code</small>
                         </div>
                         <div class="form-group">
                             {{ form.password.label }}
@@ -50,4 +50,5 @@
     
             </div>
         </div>
+        <script src="{{url_for('static', filename='user/register.js')}}"></script>
     {% endblock %}

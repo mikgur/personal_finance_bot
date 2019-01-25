@@ -1,8 +1,8 @@
 """Add telegram_id, password and one_time_code (otc) to User
 
-Revision ID: 293926327c16
-Revises:
-Create Date: 2019-01-24 22:04:22.824805
+Revision ID: 88883c122634
+Revises: 
+Create Date: 2019-01-25 22:41:37.735673
 
 """
 from alembic import op
@@ -10,7 +10,7 @@ import sqlalchemy as sa
 
 
 # revision identifiers, used by Alembic.
-revision = '293926327c16'
+revision = '88883c122634'
 down_revision = None
 branch_labels = None
 depends_on = None
@@ -21,12 +21,9 @@ def upgrade():
     op.alter_column('categories', 'is_deleted',
                     existing_type=sa.BOOLEAN(),
                     nullable=False)
-    op.add_column('users', sa.Column('otc', sa.String(length=60), nullable=True))
-    op.add_column('users', sa.Column('password', sa.String(length=60), nullable=True))
-    op.add_column('users', sa.Column('telegram_id',
-                                     sa.String(length=60),
-                                     nullable=False,
-                                     server_default="telegram_id"))
+    op.add_column('users', sa.Column('otc', sa.String(length=128), nullable=True))
+    op.add_column('users', sa.Column('password', sa.String(length=128), nullable=True))
+    op.add_column('users', sa.Column('telegram_id', sa.String(length=60), nullable=False, server_default=""))
     # ### end Alembic commands ###
 
 

@@ -5,10 +5,15 @@ import matplotlib
 matplotlib.use("Agg") # NOQA
 import seaborn as sns
 
-from pf_bot.exceptions import NoCurrencies, WrongCategory
 from pf_bot.utils import get_keyboard, month_edges, parse_transaction
 from pf_model import data_manipulator, data_observer
+from pf_model.exceptions import NoCurrencies, WrongCategory
 from pf_model.utils import is_existing_user
+from utils import send_otc
+
+
+def send_code(bot, update):
+    send_otc(update.message.from_user.username)
 
 
 def start_chat(bot, update):

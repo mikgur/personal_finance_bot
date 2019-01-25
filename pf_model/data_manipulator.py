@@ -4,10 +4,10 @@ import datetime
 import logging
 
 from sqlalchemy.orm import sessionmaker
-
-from pf_bot.exceptions import WrongCategoryType, CategoryAlreadyExist
+from werkzeug.security import generate_password_hash
 
 from .data_observer import get_all_category_names
+from .exceptions import CategoryAlreadyExist, WrongCategoryType
 from .model import (Account, AccountType, Category, CategoryType, Currency,
                     Transaction, TransactionType, User, db)
 from .utils import get_category_type_by_alias
@@ -182,3 +182,14 @@ def rename_category(user_id, new_category_name, old_category_name, category_type
     except Exception as exc:
         logging.error(f"Cannot delete category: {exc}")
         raise
+
+
+def set_otc_for_user(telegram_id, otc):
+    Session = sessionmaker(bind=db)
+    session = Session()
+
+    # Search current user
+    user = session.query(User).filter(User.telegram_id == telegram_id).one()
+    user.otc = generate_password_hash(str(otc))
+
+    session.commit()
