@@ -2,7 +2,7 @@ function request_otc() {
     var xhr = new XMLHttpRequest();
     xhr.open('POST', '/user/request-otc', true);
     xhr.setRequestHeader('Content-type', 'application/json; charset=utf-8');
-    xhr.onload = function() {
+    xhr.onload = function () {
         if (this.responseText == "Success") {
             alert('Код отправлен!');
             return;
@@ -12,12 +12,12 @@ function request_otc() {
             return;
         }
     };
-    xhr.onerror = function() {
+    xhr.onerror = function () {
         alert('Ошибка ' + xhr.status + ': ' + xhr.statusText);
     };
-    var telegram_id_value = document.forms["registration_form"]["username"].value;
+    var telegram_id_value = document.forms["registration_form"]["telegram_id"].value;
     if (telegram_id_value == "") {
-        alert("Введите свой telegram_if в поле формы")
+        alert("Введите свой telegram_id в поле формы")
         return
     }
     var telegram_id = JSON.stringify(telegram_id_value);

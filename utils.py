@@ -16,7 +16,9 @@ def send_otc(telegram_id):
     data_manipulator.set_otc_for_user(telegram_id, code)
 
     # Send code to telegram user
-    request = Request(proxy_url=settings.PROXY["proxy_url"],
-                      urllib3_proxy_kwargs=settings.PROXY["urllib3_proxy_kwargs"])
+    request = Request(
+        proxy_url=settings.PROXY["proxy_url"],
+        urllib3_proxy_kwargs=settings.PROXY["urllib3_proxy_kwargs"]
+    )
     bot = Bot(settings.API_KEY, request=request)
     bot.sendMessage(chat_id=chat_id, text=code)

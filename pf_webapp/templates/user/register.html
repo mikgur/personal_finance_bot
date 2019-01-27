@@ -1,54 +1,51 @@
 {% extends "base.html" %}
 
 {% block content %}
-    {% with messages = get_flashed_messages() %}
-        {% if messages %}
-            {% for message in messages %}
-                <div class="alert alert-danger" role="alert">
-                    {{ message }}
+{% with messages = get_flashed_messages() %}
+{% if messages %}
+{% for message in messages %}
+<div class="alert alert-danger" role="alert">
+    {{ message }}
+</div>
+{% endfor %}
+{% endif %}
+{% endwith %}
+<h1>Регистрация</h1>
+<div class="row">
+    <div class="col-4">
+        <form name="registration_form" action="{{ url_for('user.process_reg') }}" method="POST">
+            {{ form.hidden_tag() }}
+            <div class="form-group">
+                {{ form.telegram_id.label }}
+                {{ form.telegram_id() }}
+            </div>
+            <div class="form-group">
+                {{ form.bot_code.label }}
+                <div class="form-group row">
+                    <div class="form col-8">
+                        {{ form.bot_code() }}
+                    </div>
+                    <div class="form col-4">
+                        <button type="button" class="btn btn-secondary" onclick="request_otc()">Отправить код</button>
+                    </div>
                 </div>
-            {% endfor %}
-        {% endif %}
-    {% endwith %}
-        <h1>Регистрация</h1>
-        <div class="row">
-            <div class="col-4">
-                <form name="registration_form" action= "{{ url_for('user.process_reg') }}" method="POST">
-                    {{ form.hidden_tag() }}
-                        <div class="form-group">
-                            {{ form.username.label }}
-                            {{ form.username() }}
-                        </div>
-                        <div class="form-group">
-                            {{ form.email.label }}
-                            {{ form.email() }}
-                        </div>
-                        <div class="form-group">
-                            {{ form.bot_code.label }}
-                            <div class="form-group row">
-                                <div class="form col-8">
-                                    {{ form.bot_code() }}
-                                </div>
-                                <div class="form col-4">
-                                    <button type="button" class="btn btn-secondary" onclick="request_otc()">Отправить код</button>
-                                </div>
-                            </div>
-                            <small id="oneTimeCodeHelp" class="form-text text-muted">Этот код можно также получить у телеграм бота, используя команду /code</small>
-                        </div>
-                        <div class="form-group">
-                            {{ form.password.label }}
-                            {{ form.password() }}
-                        </div>
-                        <div class="form-group">
-                            {{ form.password2.label }}
-                            {{ form.password2() }}
-                        </div>
-                    <button type="button" class="btn btn-primary">{{ form.submit() }}</button>
-                </form>
+                <small id="oneTimeCodeHelp" class="form-text text-muted">Этот код можно также получить у телеграм бота,
+                    используя команду /code</small>
             </div>
-            <div class="col-8">
-    
+            <div class="form-group">
+                {{ form.password.label }}
+                {{ form.password() }}
             </div>
-        </div>
-        <script src="{{url_for('static', filename='user/register.js')}}"></script>
-    {% endblock %}
+            <div class="form-group">
+                {{ form.password2.label }}
+                {{ form.password2() }}
+            </div>
+            <button type="button" class="btn btn-primary">{{ form.submit() }}</button>
+        </form>
+    </div>
+    <div class="col-8">
+
+    </div>
+</div>
+<script src="{{url_for('static', filename='user/register.js')}}"></script>
+{% endblock %}
