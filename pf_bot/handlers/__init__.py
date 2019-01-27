@@ -2,31 +2,42 @@ from io import BytesIO
 
 import pandas as pd
 import matplotlib
-matplotlib.use("Agg") # NOQA
+matplotlib.use("Agg")  # NOQA
 import seaborn as sns
 
-from pf_bot.exceptions import NoCurrencies, WrongCategory
 from pf_bot.utils import get_keyboard, month_edges, parse_transaction
 from pf_model import data_manipulator, data_observer
+from pf_model.exceptions import NoCurrencies, WrongCategory
 from pf_model.utils import is_existing_user
+from utils import send_otc
+
+
+def send_code(bot, update):
+    send_otc(update.message.from_user.username)
 
 
 def start_chat(bot, update):
-    user = update.message.from_user
+    user = update.effective_user
     text = f"Привет, {user.first_name},"
     if is_existing_user(user.id):
         text = f"{text} слушаю тебя"
     else:
-        text = f"{text} я помогу тебе управлять личными финансами. \
-Для начала я заведу тебе несколько стандартных категорий, пару кошельков и вид дохода - Зарплата"
-        data_manipulator.add_user(user.id, user.first_name)
+        text = f"{text} я помогу тебе управлять личными финансами. Для начала \
+        я заведу тебе несколько стандартных категорий, пару кошельков и вид \
+        дохода - Зарплата"
+
+        data_manipulator.add_user(user.id, user.first_name, user.username)
 
         text = f"{text}\n\nТвои категории расходов:"
-        for i, category in enumerate(sorted(data_observer.get_all_category_names(user.id))):
+        for i, category in enumerate(
+            sorted(data_observer.get_all_category_names(user.id))
+        ):
             text = f"{text}\n{i+1}. {category}"
 
         text = f"{text}\n\nТвои счета:"
-        for i, account in enumerate(sorted(data_observer.get_all_account_names(user.id))):
+        for i, account in enumerate(
+            sorted(data_observer.get_all_account_names(user.id))
+        ):
             text = f"{text}\n{i+1}. {account}"
 
     update.message.reply_text(text, reply_markup=get_keyboard())
@@ -39,8 +50,10 @@ def add_transaction(bot, update):
         data_manipulator.add_transaction(transaction, user.id)
         update.message.reply_text("Запись сделана!")
     except NoCurrencies:
-        update.message.reply_text("В базе данных не найдено ни одной валюты. Нужно добавить хотя бы одну валюту, \
-перед вводом транзакций")
+        update.message.reply_text(
+            "В базе данных не найдено ни одной валюты. Нужно добавить хотя бы \
+            одну валюту, перед вводом транзакций"
+        )
     except WrongCategory:
         update.message.reply_text("Не могу распознать категорию")
 
@@ -49,23 +62,33 @@ def show_statistics(bot, update):
     user = update.message.from_user
 
     reply_text = "Вот статистика расходов в текущем месяце:\n "
-    for expense in data_observer.statistics_for_period_by_category(user.id, month_edges()):
+    for expense in data_observer.statistics_for_period_by_category(
+        user.id, month_edges()
+    ):
         amount = f"{expense[0]:,.0f}".replace(",", " ")
         reply_text = "\n".join([reply_text, f"{expense[1]} - {amount}"])
 
-    reply_text = "\n \n".join([reply_text, f"Твои расходы в прошлом месяце:\n "])
-    for expense in data_observer.statistics_for_period_by_category(user.id, month_edges(1)):
+    reply_text = "\n \n".join(
+        [reply_text, f"Твои расходы в прошлом месяце:\n "]
+    )
+    for expense in data_observer.statistics_for_period_by_category(
+        user.id, month_edges(1)
+    ):
         amount = f"{expense[0]:,.0f}".replace(",", " ")
         reply_text = "\n".join([reply_text, f"{expense[1]} - {amount}"])
 
     update.message.reply_text(reply_text)
 
     #  Send the barplot with statistics
-    current_data = data_observer.statistics_for_period_by_category(user.id, month_edges())
+    current_data = data_observer.statistics_for_period_by_category(
+        user.id, month_edges()
+    )
     df_current = pd.DataFrame(current_data, columns=['Amount', 'Category'])
     df_current['Month'] = 'Current'
 
-    previous_data = data_observer.statistics_for_period_by_category(user.id, month_edges(1))
+    previous_data = data_observer.statistics_for_period_by_category(
+        user.id, month_edges(1)
+    )
     df_previous = pd.DataFrame(previous_data, columns=['Amount', 'Category'])
     df_previous['Month'] = 'Previous'
 

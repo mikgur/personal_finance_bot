@@ -7,3 +7,5 @@ pf_bot.log
 .DS_Store
 pf_webapp/config.py
 run.bat
+run_web.sh
+pf_webapp.log

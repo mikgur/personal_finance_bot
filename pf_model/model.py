@@ -5,15 +5,19 @@
      - accessing existing database
     """
 
-from sqlalchemy import (Boolean, Column, Date, Float, ForeignKey, Integer,
-                        String, create_engine)
+from flask_login import UserMixin
+from sqlalchemy import (
+    Boolean, Column, Date, Float, ForeignKey, Integer, String, create_engine
+)
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import relationship
+from werkzeug.security import check_password_hash, generate_password_hash
 
 import settings
 
 db_string = f"postgres://{settings.DB_USER}:{settings.DB_PASSWORD}\
-                    @{settings.DB_HOST}:{settings.DB_PORT}/{settings.DB_DATABASE}"
+@{settings.DB_HOST}:{settings.DB_PORT}/{settings.DB_DATABASE}"
+
 db = create_engine(db_string)
 base = declarative_base()
 
@@ -40,22 +44,40 @@ class Currency(base):
     accounts = relationship("Account", back_populates="currency")
 
     def __repr__(self):
-        return f"<Currency(id='{self.id}', name='{self.name}', shortname='{self.shortname}')>"
+        return f"<Currency(id='{self.id}', name='{self.name}', \
+        shortname='{self.shortname}')>"
 
 
-class User(base):
+class User(base, UserMixin):
     __tablename__ = 'users'
 
     id = Column(Integer, primary_key=True, autoincrement=True)
     user_id = Column(Integer, nullable=False)
     user_name = Column(String(60), nullable=False)
+    telegram_id = Column(String(60), nullable=False)
+    otc = Column(String(128))
+    password = Column(String(128))
 
     accounts = relationship("Account", back_populates="user")
     transactions = relationship("Transaction", back_populates="user")
     categories = relationship("Category", back_populates="user")
 
+    def set_password(self, password):
+        self.password = generate_password_hash(password)
+
+    def check_password(self, password):
+        return check_password_hash(self.password, password)
+
+    def set_otc(self, otc):
+        self.otc = generate_password_hash(otc)
+
+    def check_otc(self, otc):
+        return check_password_hash(self.otc, otc)
+
     def __repr__(self):
-        return f"<User(id='{self.id}', user_id='{self.user_id}', user_name='{self.user_name}')>"
+        return f"<User(id='{self.id}', \
+        user_id='{self.user_id}', \
+        user_name='{self.user_name}')>"
 
 
 class Account(base):
@@ -103,7 +125,10 @@ class Category(base):
     transactions = relationship("Transaction", back_populates="category")
 
     def __repr__(self):
-        return f"<Category(id='{self.id}', name='{self.name}', user='{self.user}, type='{self.type}')>"
+        return f"<Category(id='{self.id}', \
+        name='{self.name}', \
+        user='{self.user}, \
+        type='{self.type}')>"
 
 
 class TransactionType(base):
@@ -127,7 +152,9 @@ class Transaction(base):
     category_id = Column(Integer, ForeignKey("categories.id"), nullable=False)
     amount = Column(Float, nullable=False)
     account_id = Column(Integer, ForeignKey("accounts.id"), nullable=False)
-    type_id = Column(Integer, ForeignKey("transaction_types.id"), nullable=False)
+    type_id = Column(
+        Integer, ForeignKey("transaction_types.id"), nullable=False
+    )
 
     user = relationship("User")
     category = relationship("Category")

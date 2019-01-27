@@ -4,11 +4,11 @@ from collections import namedtuple
 from telegram.ext import (ConversationHandler, Filters, MessageHandler,
                           RegexHandler)
 
-from pf_bot.exceptions import CategoryAlreadyExist, CategoryTypeNotInUserData
 from pf_bot.utils import (clear_user_data, confirmation, get_keyboard,
                           get_keyboard_from_list, main_menu,
                           make_re_template_for_menu)
 from pf_model import data_manipulator, data_observer
+from pf_model.exceptions import CategoryAlreadyExist, CategoryTypeNotInUserData
 
 Menu = namedtuple("Menu", ["expense_add", "expense_remove", "income_add", "income_remove", "back"])
 action_choices = Menu("Расходы – Добавить категорию",

@@ -6,8 +6,8 @@ from collections import namedtuple
 
 from telegram import ReplyKeyboardMarkup
 
-from pf_bot.exceptions import NoCurrencies, WrongCategory
 from pf_model import data_observer
+from pf_model.exceptions import NoCurrencies, WrongCategory
 
 AMOUNT_PATTERN = r"(^|\s)\d+([.,]\d{1,2})?"
 
