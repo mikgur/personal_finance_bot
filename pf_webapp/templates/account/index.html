@@ -1,0 +1,48 @@
+{% extends "base.html" %}
+
+{% block content %}
+    <div class="row">
+        <div class="col">
+            <div class="text-center">
+                    <h2>Счета</h2>
+            </div>
+        </div>
+    </div>
+    <br>
+    <table class="table table-bordered" id="account_table">
+        <thead class="thead-light">
+            <tr>
+                <th scope="col" style="width: 5%">#</th>
+                <th scope="col" style="width: 50%">Название</th>
+                <th scope="col" style="width: 16%">Остаток</th>
+                <th scope="col" style="width: 6%">Валюта</th>
+                <th scope="col" style="width: 13%"></th>
+                <th scope="col" style="width: 10%"></th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for account in accounts_list %}
+                <tr>
+                    <td class = "align-middle">
+                        <span id="number{{ loop.index }}">{{ loop.index }}</span></td>
+                    <td class = "align-middle">
+                        <span id="caption{{ loop.index }}">{{ account[0] }}</span></td>
+                    <td class = "align-middle">
+                        <span id="balance{{ loop.index }}">тут будут балансы</span></td>
+                    <td class = "align-middle">
+                        <span id="currency{{ loop.index }}">{{ account[1] }}</span></td>
+                    <td class = "align-middle text-center">
+                        <button type="button" class="btn btn-secondary" id="left_btn{{ loop.index }}" onclick="edit_account.call(this)">Изменить</button>
+                    </td>
+                    <td class = "align-middle text-center">
+                        <button type="button" class="btn btn-secondary" id="right_btn{{ loop.index }}" onclick="delete_account.call(this)">Удалить</button>
+                    </td>
+                </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+    <div class="row">
+        <div class="col"><button type="button" class="btn btn-primary" id="add_btn" onclick="add_new_row()">Новый</button></div>
+    </div>
+    <script src="{{url_for('static', filename='account/index.js')}}"></script>
+{% endblock %}

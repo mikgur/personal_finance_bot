@@ -22,12 +22,19 @@ def get_keyboard(context="main_menu", one_time_keyboard=False):
     if context == "main_menu":
         return get_keyboard_from_list(list(main_menu), cancel=False)
     elif context == "confirmation":
-        return ReplyKeyboardMarkup([list(confirmation)], one_time_keyboard=one_time_keyboard, resize_keyboard=True)
+        return ReplyKeyboardMarkup(
+            [list(confirmation)],
+            one_time_keyboard=one_time_keyboard,
+            resize_keyboard=True
+        )
 
 
-def get_keyboard_from_list(names, number_of_rows=2, cancel=True, one_time_keyboard=False):
+def get_keyboard_from_list(
+    names, number_of_rows=2, cancel=True, one_time_keyboard=False
+):
     """
-    Function create a keyboard from names of categories/accounts/other list of objects
+    Function create a keyboard from names of categories/accounts/other
+    list of objects
     """
     keyboard_buttons = []
     buttons = names.copy()
@@ -38,7 +45,11 @@ def get_keyboard_from_list(names, number_of_rows=2, cancel=True, one_time_keyboa
         if num % number_of_rows == 0:
             keyboard_buttons.append([])
         keyboard_buttons[-1].append(name)
-    return ReplyKeyboardMarkup(keyboard_buttons, one_time_keyboard=one_time_keyboard, resize_keyboard=True)
+    return ReplyKeyboardMarkup(
+        keyboard_buttons,
+        one_time_keyboard=one_time_keyboard,
+        resize_keyboard=True
+    )
 
 
 def make_re_template_for_menu(choices):
@@ -51,7 +62,8 @@ def make_re_template_for_menu(choices):
 
 
 def month_edges(month_relative_positions=0):
-    """ return edges of month which is month_relative_position earlier then current:
+    """ return edges of month which is month_relative_position
+        earlier then current:
         month_edges(0) in Jan 2019 will return [01.01.2019, 31.01.2019]
         month_edges(1) in Jan 2019 will return [01.12.2018, 31.12.2018]
         month_edges(12) in Jan 2019 will return [01.01.2018, 31.01.2018]
@@ -80,14 +92,20 @@ def parse_transaction(line, user_id):
         logging.error("There are no currencies in database")
         raise
 
-    transaction_amount = re.search(AMOUNT_PATTERN, transaction_amount_currency).group()
-    transaction_currency = transaction_amount_currency.replace(transaction_amount, "").strip()
+    transaction_amount = re.search(
+        AMOUNT_PATTERN, transaction_amount_currency
+    ).group()
+    transaction_currency = transaction_amount_currency.replace(
+        transaction_amount, ""
+    ).strip()
     transaction_amount = transaction_amount.replace(",", ".")
     text = text.replace(transaction_amount_currency, "")
 
     #  Search for category
-    expense_category_list = [category for category in data_observer.get_all_category_names(user_id)
-                             if category.lower() in text]
+    expense_category_list = [
+        category for category in data_observer.get_all_category_names(user_id)
+        if category.lower() in text
+    ]
     transaction_category = ""
     transaction_type = ""
     if expense_category_list:
@@ -95,8 +113,11 @@ def parse_transaction(line, user_id):
         text = text.replace(transaction_category, "")
         transaction_type = "expense"
     else:
-        income_category_list = [category for category in data_observer.get_all_category_names(user_id, "income")
-                                if category.lower() in text]
+        income_category_list = [
+            category for category in data_observer.
+            get_all_category_names(user_id, "income")
+            if category.lower() in text
+        ]
         if income_category_list:
             transaction_category = max(income_category_list, key=len)
             text = text.replace(transaction_category, "")
@@ -106,16 +127,26 @@ def parse_transaction(line, user_id):
             raise WrongCategory
 
     # Search for account
-    account_list = [account for account in data_observer.get_all_account_names(user_id) if account.lower() in text]
+    account_list = [
+        account for account in data_observer.get_all_account_names(user_id)
+        if account.lower() in text
+    ]
     transaction_account = ""
     if account_list:
         transaction_account = max(account_list, key=len)
         text = text.replace(transaction_account, "")
     else:
-        transaction_account = "Наличные"  # считаем этот счет счетом по-умолчанию, далее добавим возможность выбора
+        # считаем этот счет счетом по-умолчанию,
+        # далее добавим возможность выбора"
+        transaction_account = "Наличные"
 
-    return {"amount": transaction_amount, "currency": transaction_currency, "category": transaction_category,
-            "type": transaction_type, "account": transaction_account}
+    return {
+        "amount": transaction_amount,
+        "currency": transaction_currency,
+        "category": transaction_category,
+        "type": transaction_type,
+        "account": transaction_account
+    }
 
 
 def amount_with_currency_pattern():
@@ -123,13 +154,15 @@ def amount_with_currency_pattern():
     (e.g. '123.23usd', '12,4 руб')
     """
     logging.debug("building transaction pattern")
-    currencies = data_observer.get_all_currencies_shortnames()
+    currencies = data_observer.get_all_currency_shortnames()
     if not currencies:
         raise NoCurrencies
     currency_variants = [currency.capitalize() for currency in currencies]
     currency_variants.extend([currency.upper() for currency in currencies])
     currencies.extend(currency_variants)
-    pattern = ''.join([r"(^|\s)\d+([.,]\d{1,2})? ?(", "|".join(currencies), r")?($|\s)"])
+    pattern = ''.join(
+        [r"(^|\s)\d+([.,]\d{1,2})? ?(", "|".join(currencies), r")?($|\s)"]
+    )
     return pattern
 
 
@@ -137,6 +170,8 @@ def clear_user_data(user_data, conversation="all"):
     if conversation == "all":
         user_data.clear()
     elif conversation == "categories_menu":
-        for key in ["delete_category_name", "delete_category_type", "add_category_type"]:
+        for key in [
+            "delete_category_name", "delete_category_type", "add_category_type"
+        ]:
             if key in user_data:
                 del user_data[key]

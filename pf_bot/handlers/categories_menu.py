@@ -8,7 +8,7 @@ from pf_bot.utils import (clear_user_data, confirmation, get_keyboard,
                           get_keyboard_from_list, main_menu,
                           make_re_template_for_menu)
 from pf_model import data_manipulator, data_observer
-from pf_model.exceptions import CategoryAlreadyExist, CategoryTypeNotInUserData
+from pf_model.exceptions import ObjectAlreadyExist, CategoryTypeNotInUserData
 
 Menu = namedtuple("Menu", ["expense_add", "expense_remove", "income_add", "income_remove", "back"])
 action_choices = Menu("Расходы – Добавить категорию",
@@ -74,7 +74,7 @@ def add_category(bot, update, user_data):
         clear_user_data(user_data, "categories_menu")
         return ConversationHandler.END
 
-    except CategoryAlreadyExist:
+    except ObjectAlreadyExist:
         reply_text = "Такая категория уже существует, кстати, вот список всех категорий, которые у тебя есть:"
 
         for i, category in enumerate(sorted(data_observer.get_all_category_names(user.id,

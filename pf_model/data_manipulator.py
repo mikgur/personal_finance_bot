@@ -5,8 +5,8 @@ import logging
 
 from sqlalchemy.orm import sessionmaker
 
-from .data_observer import get_all_category_names
-from .exceptions import CategoryAlreadyExist, WrongCategoryType
+from .data_observer import get_all_category_names, get_all_account_names
+from .exceptions import ObjectAlreadyExist, WrongCategoryType
 from .model import (
     Account, AccountType, Category, CategoryType, Currency, Transaction,
     TransactionType, User, db
@@ -21,6 +21,13 @@ def add_account(name, user_id, currency_name, account_type_name="general"):
     currency_name - shortname of currency (eg 'usd')
     account_type_name - name of type
     '''
+
+    name = name.capitalize()
+    if name in get_all_account_names(
+        user_id, account_type_name, with_currencies=False
+    ):
+        raise ObjectAlreadyExist
+
     try:
         Session = sessionmaker(bind=db)
         session = Session()
@@ -33,14 +40,28 @@ def add_account(name, user_id, currency_name, account_type_name="general"):
             Currency.shortname == currency_name
         ).one()
 
-        session.add(
-            Account(
-                name=name, user=user, currency=currency, type=account_type
-            )
+        query = session.query(Account).filter(
+            Account.user == user, Account.name == name,
+            Account.type == account_type
         )
+        existing_account = query.first()
+        if existing_account:
+            existing_account.is_deleted = False
+        else:
+            session.add(
+                Account(
+                    name=name,
+                    user=user,
+                    currency=currency,
+                    type=account_type,
+                    is_deleted=False
+                )
+            )
         session.commit()
+        return True
     except Exception as exc:
         logging.error(f'Error while adding account: {exc}')
+        return False
 
 
 def add_category(name, user_id, category_type_name="expense"):
@@ -54,7 +75,7 @@ def add_category(name, user_id, category_type_name="expense"):
         if name in get_all_category_names(
             user_id, category_type_name, "active"
         ):
-            raise CategoryAlreadyExist
+            raise ObjectAlreadyExist
         Session = sessionmaker(bind=db)
         session = Session()
 
@@ -82,7 +103,7 @@ def add_category(name, user_id, category_type_name="expense"):
     except WrongCategoryType:
         logging.error("Wrong category type is used to access database")
         return False
-    except CategoryAlreadyExist:
+    except ObjectAlreadyExist:
         logging.error("Trying to add category which already exist")
         raise
     except Exception as exc:
@@ -150,6 +171,39 @@ def add_user(user_id, first_name, username):
         logging.error(f'Error while adding user: {exc}')
 
 
+def delete_account(user_id, account_name, account_type_name="general"):
+    try:
+        Session = sessionmaker(bind=db)
+        session = Session()
+
+        user = session.query(User).filter(User.user_id == user_id).one()
+        query = session.query(Account).filter(Account.user == user)
+
+        account_type = session.query(AccountType).filter(
+            AccountType.name == account_type_name
+        ).one()
+        #  Search for category which needs to be deleted
+        query = query.filter(
+            Account.type == account_type, Account.name == account_name
+        )
+        #  Check that there is only one object in query
+        account = query.one()
+        transaction_query = session.query(Transaction).filter(
+            Transaction.account == account
+        )
+        #  We will delete account if there were no transactions releated to
+        # it, we will mark category as deleted otherwise
+        if transaction_query.first():
+            account.is_deleted = True
+        else:
+            query.delete()
+        session.commit()
+        return True
+    except Exception as exc:
+        logging.error(f"Cannot delete account: {exc}")
+        return False
+
+
 def delete_category(user_id, category_name, category_type_name):
     try:
         Session = sessionmaker(bind=db)
@@ -187,6 +241,47 @@ def delete_category(user_id, category_name, category_type_name):
         return False
 
 
+def edit_account(
+    user_id, new_account_name, old_account_name, account_type_name="general"
+):
+    logging_text = (
+        f"edit_account user: {user_id} \
+        new_account_name: {new_account_name} \
+        old_account_name: {old_account_name} \
+        type: {account_type_name}"
+    )
+    logging.info(logging_text)
+    try:
+        new_account_name = new_account_name.capitalize()
+        if new_account_name in get_all_account_names(
+            user_id, account_type_name, with_currencies=False
+        ):
+            raise ObjectAlreadyExist
+        Session = sessionmaker(bind=db)
+        session = Session()
+
+        user = session.query(User).filter(User.user_id == user_id).one()
+        query = session.query(Account).filter(Account.user == user)
+
+        account_type = session.query(AccountType).filter(
+            AccountType.name == account_type_name
+        ).one()
+        #  Search for account which needs to be renamed
+        query = query.filter(
+            Account.type == account_type, Account.name == old_account_name
+        )
+        #  Check that there is only one object in query
+        account = query.one()
+        account.name = new_account_name
+        session.commit()
+    except ObjectAlreadyExist:
+        logging.error("Trying to add account which already exist")
+        raise
+    except Exception as exc:
+        logging.error(f"Cannot edit account: {exc}")
+        raise
+
+
 def rename_category(
     user_id, new_category_name, old_category_name, category_type_name
 ):
@@ -202,7 +297,7 @@ def rename_category(
         if new_category_name in get_all_category_names(
             user_id, category_type_name, "active"
         ):
-            raise CategoryAlreadyExist
+            raise ObjectAlreadyExist
         Session = sessionmaker(bind=db)
         session = Session()
 
@@ -224,11 +319,11 @@ def rename_category(
     except WrongCategoryType:
         logging.error("Wrong category type is used to access database")
         raise
-    except CategoryAlreadyExist:
+    except ObjectAlreadyExist:
         logging.error("Trying to add category which already exist")
         raise
     except Exception as exc:
-        logging.error(f"Cannot delete category: {exc}")
+        logging.error(f"Cannot rename category: {exc}")
         raise
 
 

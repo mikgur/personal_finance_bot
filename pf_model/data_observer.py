@@ -14,8 +14,12 @@ from .model import (
 from .utils import get_category_type_by_alias
 
 
-def get_all_account_names(user_id, account_type_name="general"):
-    '''returns a list with names of all accounts of particular type'''
+def get_all_account_names(
+    user_id, account_type_name="general", with_currencies=True
+):
+    """returns a list with names of all accounts of particular type with/
+    without corresponding currency
+    """
     try:
         Session = sessionmaker(bind=db)
         session = Session()
@@ -27,6 +31,8 @@ def get_all_account_names(user_id, account_type_name="general"):
                 AccountType.name == account_type_name
             ).one()
             query = query.filter(Account.type == account_type)
+        if with_currencies:
+            return [(acc.name, acc.currency.shortname) for acc in query.all()]
         return [acc.name for acc in query.all()]
     except Exception as exc:
         logging.error(f'Cannot get accounts from database: {exc}')
@@ -66,7 +72,7 @@ def get_all_category_names(
         return []
 
 
-def get_all_currencies_shortnames():
+def get_all_currency_shortnames():
     """returns a list with shortnames of all currencies"""
     try:
         Session = sessionmaker(bind=db)

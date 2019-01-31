@@ -5,6 +5,7 @@ from flask_login import LoginManager
 from sqlalchemy.orm import sessionmaker
 
 from pf_model.model import User, db
+from pf_webapp.account.views import blueprint as account_blueprint
 from pf_webapp.category.views import blueprint as category_blueprint
 from pf_webapp.user.views import blueprint as user_blueprint
 
@@ -30,6 +31,7 @@ def create_app():
         session = Session()
         return session.query(User).filter(User.id == user_id).first()
 
+    app.register_blueprint(account_blueprint)
     app.register_blueprint(category_blueprint)
     app.register_blueprint(user_blueprint)
 
