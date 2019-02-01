@@ -14,7 +14,12 @@ from .model import (
 from .utils import get_category_type_by_alias
 
 
-def add_account(name, user_id, currency_name, account_type_name="general"):
+def add_account(name,
+                user_id,
+                currency_name,
+                balance=0,
+                account_type_name="general"
+                ):
     '''Add Account to database.
     name - account name
     user_id - telegram user id (number)
@@ -24,7 +29,7 @@ def add_account(name, user_id, currency_name, account_type_name="general"):
 
     name = name.capitalize()
     if name in get_all_account_names(
-        user_id, account_type_name, with_currencies=False
+        user_id, account_type_name, with_amounts=False
     ):
         raise ObjectAlreadyExist
 
@@ -54,6 +59,7 @@ def add_account(name, user_id, currency_name, account_type_name="general"):
                     user=user,
                     currency=currency,
                     type=account_type,
+                    initial_balance=balance,
                     is_deleted=False
                 )
             )
@@ -254,7 +260,7 @@ def edit_account(
     try:
         new_account_name = new_account_name.capitalize()
         if new_account_name in get_all_account_names(
-            user_id, account_type_name, with_currencies=False
+            user_id, account_type_name, with_amounts=False
         ):
             raise ObjectAlreadyExist
         Session = sessionmaker(bind=db)

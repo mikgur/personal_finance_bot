@@ -19,11 +19,12 @@ action_choices = Menu("Расходы – Добавить категорию",
 
 
 def start(bot, update):
-    update.message.reply_text("Выбери, что именно нужно сделать",
-                              reply_markup=get_keyboard_from_list(list(action_choices),
-                                                                  cancel=False,
-                                                                  one_time_keyboard=True)
-                              )
+    update.message.reply_text(
+        "Выбери, что именно нужно сделать",
+        reply_markup=get_keyboard_from_list(list(action_choices),
+                                            cancel=False,
+                                            one_time_keyboard=True)
+        )
     return "menu_choice"
 
 
@@ -32,18 +33,25 @@ def menu_choice(bot, update, user_data):
     user = update.message.from_user
     choice = update.message.text
     if choice == action_choices.back:
-        update.message.reply_text(f"{user.first_name}, слушаю тебя", reply_markup=get_keyboard("main_menu"))
+        update.message.reply_text(f"{user.first_name}, слушаю тебя",
+                                  reply_markup=get_keyboard("main_menu"))
         clear_user_data(user_data, "categories_menu")
         return ConversationHandler.END
 
-    category_type = "income" if choice in [action_choices.income_add, action_choices.income_remove] else "expense"
-    action = "add" if choice in [action_choices.income_add, action_choices.expense_add] else "remove"
+    category_type = "income" if choice in [action_choices.income_add,
+                                           action_choices.income_remove] else "expense"
+    action = "add" if choice in [action_choices.income_add,
+                                 action_choices.expense_add] else "remove"
 
     categories = data_observer.get_all_category_names(user.id, category_type)
     if action == "remove":
         user_data["delete_category_type"] = category_type
         reply_text = "Выберите категорию, которую хотите удалить:"
-        update.message.reply_text(reply_text, reply_markup=get_keyboard_from_list(categories, one_time_keyboard=True))
+        update.message.reply_text(
+                                  reply_text,
+                                  reply_markup=get_keyboard_from_list(
+                                      categories,
+                                      one_time_keyboard=True))
         return "delete_category"
     elif action == "add":
         user_data["add_category_type"] = category_type

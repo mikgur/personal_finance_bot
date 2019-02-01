@@ -8,15 +8,13 @@ from sqlalchemy.orm.exc import MultipleResultsFound, NoResultFound
 
 from .exceptions import UserNotFoundOrMultipleUsers, WrongCategoryType
 from .model import (
-    Account, AccountType, Category, CategoryType, Currency, Transaction, User,
-    db
-)
+    Account, AccountType, Category, CategoryType, Currency, Transaction,
+    TransactionType, User, db)
 from .utils import get_category_type_by_alias
 
 
 def get_all_account_names(
-    user_id, account_type_name="general", with_currencies=True
-):
+        user_id, account_type_name="general", with_amounts=True):
     """returns a list with names of all accounts of particular type with/
     without corresponding currency
     """
@@ -27,12 +25,34 @@ def get_all_account_names(
         user = session.query(User).filter(User.user_id == user_id).one()
         query = session.query(Account).filter(Account.user == user)
         if account_type_name:
-            account_type = session.query(AccountType).filter(
-                AccountType.name == account_type_name
-            ).one()
+            account_type = (session
+                            .query(AccountType)
+                            .filter(AccountType.name == account_type_name)
+                            .one())
             query = query.filter(Account.type == account_type)
-        if with_currencies:
-            return [(acc.name, acc.currency.shortname) for acc in query.all()]
+        if with_amounts:
+            expense = (session
+                       .query(TransactionType)
+                       .filter(TransactionType.name == "expense")
+                       .one())
+            income = (session
+                      .query(TransactionType)
+                      .filter(TransactionType.name == "income")
+                      .one())
+            accounts_info = []
+            for acc in query.all():
+                acc_balance = (acc.initial_balance
+                               + sum(tr.amount
+                                     for tr in acc.transactions
+                                     if tr.type == income)
+                               - sum(tr.amount
+                                     for tr in acc.transactions
+                                     if tr.type == expense))
+
+                accounts_info.append([acc.name,
+                                      f'{acc_balance:,.2f}'.replace(',', ' '),
+                                      acc.currency.shortname])
+            return accounts_info
         return [acc.name for acc in query.all()]
     except Exception as exc:
         logging.error(f'Cannot get accounts from database: {exc}')
@@ -40,8 +60,7 @@ def get_all_account_names(
 
 
 def get_all_category_names(
-    user_id, category_type_name="expense", status="active"
-):
+        user_id, category_type_name="expense", status="active"):
     """returns a list with names of all categories of particular type
         status = ["active", "deleted", "all"]
     """
@@ -53,11 +72,13 @@ def get_all_category_names(
         query = session.query(Category).filter(Category.user == user)
         if category_type_name:
             category_type_name_db = get_category_type_by_alias(
-                category_type_name
-            )
-            category_type = session.query(CategoryType).filter(
-                CategoryType.name == category_type_name_db
-            ).one()
+                category_type_name)
+            category_type = (session
+                             .query(CategoryType)
+                             .filter(
+                                CategoryType.name == category_type_name_db
+                                )
+                             .one())
             query = query.filter(Category.type == category_type)
             if status == "active":
                 query = query.filter(Category.is_deleted.is_(False))
@@ -118,15 +139,19 @@ def statistics_for_period_by_category(
         session = Session()
 
         user = session.query(User).filter(User.user_id == user_id).one()
-        category_type = session.query(CategoryType).filter(
-            CategoryType.name == category_type_name
-        ).one()
+        category_type = (session
+                         .query(CategoryType)
+                         .filter(
+                            CategoryType.name == category_type_name
+                            )
+                         .one())
 
         query = session.query(
             func.sum(Transaction.amount).label('total'), Category.name
         ).join(Category, CategoryType).filter(
             Transaction.user_id == user.id,
-            CategoryType.id == category_type.id, Transaction.date >= period[0],
+            CategoryType.id == category_type.id,
+            Transaction.date >= period[0],
             Transaction.date <= period[1]
         ).group_by(Category.name).order_by(
             func.sum(Transaction.amount).label('total').desc()

@@ -89,6 +89,7 @@ class Account(base):
     currency_id = Column(Integer, ForeignKey("currencies.id"), nullable=False)
     type_id = Column(Integer, ForeignKey("account_types.id"), nullable=False)
     is_deleted = Column(Boolean, nullable=False)
+    initial_balance = Column(Float, nullable=False)
 
     user = relationship("User")
     currency = relationship("Currency")

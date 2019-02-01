@@ -1,4 +1,22 @@
 var old_captions = {}
+currency_names = []
+get_currency_names()
+
+
+function get_currency_names() {
+    var xhr = new XMLHttpRequest();
+    xhr.open('GET', '/account/get_currencies', true);
+    xhr.setRequestHeader('Content-type', 'application/json; charset=utf-8');
+    xhr.onload = function() {
+        var data = JSON.parse(this.responseText);
+        currency_names = data
+    };
+    xhr.onerror = function() {
+        alert('Ошибка ' + xhr.status + ': ' + xhr.statusText);
+    };
+    xhr.send();
+}
+
 
 function save_new_account() {
     // Новый счет всегда самая последяя строка
@@ -11,6 +29,16 @@ function save_new_account() {
         alert("Вы пытаетесь сохранить счет без названия, так нельзя");
         return;
     };
+
+    var text_input = document.getElementById('balance_input' + num);
+    balance = text_input.value;
+    if (balance == '') {
+        balance = 0
+    };
+
+    var select_input = document.getElementById('currency_input' + num);
+    currency = select_input.value;
+
     var xhr = new XMLHttpRequest();
     xhr.open('POST', '/account/add_new_account', true);
     xhr.setRequestHeader('Content-type', 'application/json; charset=utf-8');
@@ -24,7 +52,9 @@ function save_new_account() {
     xhr.onerror = function() {
         alert('Ошибка ' + xhr.status + ': ' + xhr.statusText);
     };
-    var new_account = JSON.stringify(caption);
+    var new_account = JSON.stringify({"name": caption, 
+                                 "initial_balance": balance,
+                                "currency":currency})
     xhr.send(new_account);
 };
 
@@ -57,6 +87,7 @@ function add_row(caption, balance, currency) {
 
     cell_caption = new_row.insertCell(-1);
     cell_caption.className = 'align-middle';
+    cell_caption.style = 'text-align: right';
     span_caption = document.createElement("span");
     span_caption.id = "balance" + html_row_num;
     span_caption.innerText = balance;
@@ -141,12 +172,11 @@ function edit_account(self=false, new_account = false) {
         var text_input = document.createElement("input");
         text_input.type = "number";
         text_input.id = "balance_input" + num;
-        text_input.style = "width: 100%";
+        text_input.style = "width: 100%; text-align: right";
         text_input.value = "0";
         balance.parentNode.replaceChild(text_input, balance);
 
         var currency = document.getElementById("currency" + num);
-        currency_names = ["РУБ", "руб", "USD"]
         var select_input = document.createElement("select")
         select_input.id = "currency_input" + num;
         select_input.style = "width: 100%";
@@ -155,7 +185,7 @@ function edit_account(self=false, new_account = false) {
             option.text = currency_names[i];
             select_input.add(option);
         };
-        select_input.value = "USD";
+        select_input.value = "руб";
         currency.parentNode.replaceChild(select_input, currency);
     }
 
@@ -255,7 +285,7 @@ function update_accounts() {
         var empty_table = document.createElement('tbody');
         account_table.parentNode.replaceChild(empty_table, account_table);
         for (var i in data) {
-            add_row(data[i][0], 0 ,data[i][1]);
+            add_row(data[i][0], data[i][1] ,data[i][2]);
         };
         enable_all_buttons();
     };

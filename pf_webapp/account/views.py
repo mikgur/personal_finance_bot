@@ -20,7 +20,25 @@ def index():
     )
 
 
-@blueprint.route("/delete_account", methods=["POST"])  # ИСПРАВИТЬ
+@blueprint.route("/add_new_account", methods=["POST"])
+def add_new_account():
+    if not current_user.is_authenticated:
+        return redirect(url_for("user.login"))
+    user_id = current_user.user_id
+    new_account = request.get_json()
+    try:
+        result = data_manipulator.add_account(
+            new_account['name'],
+            user_id,
+            new_account['currency'],
+            new_account['initial_balance']
+        )
+    except ObjectAlreadyExist:
+        return "already_exist"
+    return "success" if result else "failure"
+
+
+@blueprint.route("/delete_account", methods=["POST"])
 def delete_account():
     if not current_user.is_authenticated:
         return redirect(url_for("user.login"))
@@ -32,22 +50,7 @@ def delete_account():
     return "success" if result else "failure"
 
 
-@blueprint.route("/add_new_account", methods=["POST"])  # ИСПРАВИТЬ
-def add_new_account():
-    if not current_user.is_authenticated:
-        return redirect(url_for("user.login"))
-    user_id = current_user.user_id
-    new_account = request.get_json()
-    try:
-        result = data_manipulator.add_account(
-            new_account, user_id, "руб"
-        )
-    except ObjectAlreadyExist:
-        return "already_exist"
-    return "success" if result else "failure"
-
-
-@blueprint.route("/edit_account", methods=["POST"])  # ИСПРАВИТЬ
+@blueprint.route("/edit_account", methods=["POST"])
 def edit_account():
     if not current_user.is_authenticated:
         return redirect(url_for("user.login"))
@@ -62,6 +65,11 @@ def edit_account():
     except Exception:
         return "failure"
     return "success"
+
+
+@blueprint.route("/get_currencies")
+def get_currencies():
+    return json.dumps(data_observer.get_all_currency_shortnames())
 
 
 @blueprint.route("/update")
