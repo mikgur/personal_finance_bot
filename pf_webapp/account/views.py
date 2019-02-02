@@ -28,9 +28,7 @@ def add_new_account():
     new_account = request.get_json()
     try:
         result = data_manipulator.add_account(
-            new_account['name'],
-            user_id,
-            new_account['currency'],
+            new_account['name'], user_id, new_account['currency'],
             new_account['initial_balance']
         )
     except ObjectAlreadyExist:
@@ -44,9 +42,7 @@ def delete_account():
         return redirect(url_for("user.login"))
     user_id = current_user.user_id
     account_to_delete = request.get_json()
-    result = data_manipulator.delete_account(
-        user_id, account_to_delete
-    )
+    result = data_manipulator.delete_account(user_id, account_to_delete)
     return "success" if result else "failure"
 
 
@@ -57,9 +53,7 @@ def edit_account():
     user_id = current_user.user_id
     account = request.get_json()
     try:
-        data_manipulator.edit_account(
-            user_id, account["new"], account["old"]
-        )
+        data_manipulator.edit_account(user_id, account["new"], account["old"])
     except ObjectAlreadyExist:
         return "already_exist"
     except Exception:

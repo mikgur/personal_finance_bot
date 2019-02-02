@@ -30,14 +30,14 @@ def start_chat(bot, update):
 
         text = f"{text}\n\nТвои категории расходов:"
         for i, category in enumerate(
-                sorted(data_observer.get_all_category_names(user.id))
-                ):
+            sorted(data_observer.get_all_category_names(user.id))
+        ):
             text = f"{text}\n{i+1}. {category}"
 
         text = f"{text}\n\nТвои счета:"
         for i, account in enumerate(
-                sorted(data_observer.get_all_account_names(user.id))
-                ):
+            sorted(data_observer.get_all_account_names(user.id))
+        ):
             text = f"{text}\n{i+1}. {account}"
 
     update.message.reply_text(text, reply_markup=get_keyboard())
@@ -63,16 +63,17 @@ def show_statistics(bot, update):
 
     reply_text = "Вот статистика расходов в текущем месяце:\n "
     for expense in data_observer.statistics_for_period_by_category(
-            user.id, month_edges()
-            ):
+        user.id, month_edges()
+    ):
         amount = f"{expense[0]:,.0f}".replace(",", " ")
         reply_text = "\n".join([reply_text, f"{expense[1]} - {amount}"])
 
     reply_text = "\n \n".join(
-        [reply_text, f"Твои расходы в прошлом месяце:\n "])
+        [reply_text, f"Твои расходы в прошлом месяце:\n "]
+    )
     for expense in data_observer.statistics_for_period_by_category(
-            user.id, month_edges(1)
-            ):
+        user.id, month_edges(1)
+    ):
         amount = f"{expense[0]:,.0f}".replace(",", " ")
         reply_text = "\n".join([reply_text, f"{expense[1]} - {amount}"])
 
@@ -80,12 +81,14 @@ def show_statistics(bot, update):
 
     #  Send the barplot with statistics
     current_data = data_observer.statistics_for_period_by_category(
-        user.id, month_edges())
+        user.id, month_edges()
+    )
     df_current = pd.DataFrame(current_data, columns=['Amount', 'Category'])
     df_current['Month'] = 'Current'
 
     previous_data = data_observer.statistics_for_period_by_category(
-        user.id, month_edges(1))
+        user.id, month_edges(1)
+    )
     df_previous = pd.DataFrame(previous_data, columns=['Amount', 'Category'])
     df_previous['Month'] = 'Previous'
 

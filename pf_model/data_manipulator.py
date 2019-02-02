@@ -14,12 +14,9 @@ from .model import (
 from .utils import get_category_type_by_alias
 
 
-def add_account(name,
-                user_id,
-                currency_name,
-                balance=0,
-                account_type_name="general"
-                ):
+def add_account(
+    name, user_id, currency_name, balance=0, account_type_name="general"
+):
     '''Add Account to database.
     name - account name
     user_id - telegram user id (number)
