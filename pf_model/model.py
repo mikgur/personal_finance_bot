@@ -55,7 +55,7 @@ class User(base, UserMixin):
     user_id = Column(Integer, nullable=False)
     user_name = Column(String(60), nullable=False)
     telegram_id = Column(String(60), nullable=False)
-    otc = Column(String(128))
+    otp = Column(String(128))
     password = Column(String(128))
 
     accounts = relationship("Account", back_populates="user")
@@ -68,11 +68,11 @@ class User(base, UserMixin):
     def check_password(self, password):
         return check_password_hash(self.password, password)
 
-    def set_otc(self, otc):
-        self.otc = generate_password_hash(otc)
+    def set_otp(self, otp):
+        self.otp = generate_password_hash(otp)
 
-    def check_otc(self, otc):
-        return check_password_hash(self.otc, otc)
+    def check_otp(self, otp):
+        return check_password_hash(self.otp, otp)
 
     def __repr__(self):
         return f"<User(id='{self.id}', \

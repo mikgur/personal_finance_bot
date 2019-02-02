@@ -67,7 +67,7 @@ class RegistrationForm(FlaskForm):
             ).one()
         except UserNotFoundOrMultipleUsers:
             raise ValidationError("Указан неверный telegram id")
-        if not user.check_otc(bot_code.data):
+        if not user.check_otp(bot_code.data):
             raise ValidationError(
                 "Введен неверный one-time code, повторите ввод, или получите у \
                 бота новый"

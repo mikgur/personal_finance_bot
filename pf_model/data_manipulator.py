@@ -330,12 +330,12 @@ def rename_category(
         raise
 
 
-def set_otc_for_user(telegram_id, otc):
+def set_otp_for_user(telegram_id, otp):
     Session = sessionmaker(bind=db)
     session = Session()
 
     # Search current user
     user = session.query(User).filter(User.telegram_id == telegram_id).one()
-    user.set_otc(str(otc))
+    user.set_otp(str(otp))
 
     session.commit()

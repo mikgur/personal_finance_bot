@@ -7,13 +7,13 @@ import settings
 from pf_model import data_observer, data_manipulator
 
 
-def send_otc(telegram_id):
+def send_otp(telegram_id):
     code = randint(*settings.CODE_RANGE)
     # Get chat_id for telegram_id from database
     chat_id = data_observer.get_user_chat_id(telegram_id)
 
     # Save code hash to database
-    data_manipulator.set_otc_for_user(telegram_id, code)
+    data_manipulator.set_otp_for_user(telegram_id, code)
 
     # Send code to telegram user
     request = Request(

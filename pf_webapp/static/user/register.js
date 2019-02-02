@@ -1,6 +1,6 @@
-function request_otc() {
+function request_otp() {
     var xhr = new XMLHttpRequest();
-    xhr.open('POST', '/user/request-otc', true);
+    xhr.open('POST', '/user/request-otp', true);
     xhr.setRequestHeader('Content-type', 'application/json; charset=utf-8');
     xhr.onload = function () {
         if (this.responseText == "Success") {

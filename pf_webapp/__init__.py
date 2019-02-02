@@ -29,7 +29,7 @@ def create_app():
     def load_user(user_id):
         Session = sessionmaker(bind=db)
         session = Session()
-        return session.query(User).filter(User.id == user_id).first()
+        return session.query(User).filter(User.id == user_id).one()
 
     app.register_blueprint(account_blueprint)
     app.register_blueprint(category_blueprint)
