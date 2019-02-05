@@ -166,21 +166,23 @@ def get_list_of_transactions(user_id,
             Transaction.user_id == user.id,
             Transaction.type_id == transaction_type.id
         )
+        transactions_query = query
         if period:
-            query = query.filter(
-                Transaction.date >= period[0],
-                Transaction.date <= period[1]
+            transactions_query = query.filter(
+                Transaction.date >= period["start"],
+                Transaction.date <= period["end"]
             )
     except Exception as exc:
         logging.error(f"Cannot get transactions info from database: {exc}")
         return []
 
     transactions_info = [
-        {'date': transaction[0],
+        {'date': f"{transaction[0]:%Y-%m-%d}",
          'category': transaction[1],
          'account': transaction[2],
          'amount': f'{transaction[3]:,.2f}'.replace(',', ' '),
-         'currency': transaction[4]} for transaction in query.all()
+         'currency': transaction[4]} for transaction
+        in transactions_query.all()
     ]
 
     return transactions_info

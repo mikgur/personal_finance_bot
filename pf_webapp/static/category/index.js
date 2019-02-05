@@ -215,7 +215,6 @@ function update_categories() {
     xhr.onload = function() {
         var data = JSON.parse(this.responseText);
         var category_table = document.getElementById('category_table').getElementsByTagName('tbody')[0];
-        rows_length = category_table.rows.length;
         var empty_table = document.createElement('tbody');
         category_table.parentNode.replaceChild(empty_table, category_table);
         for (var i in data) {

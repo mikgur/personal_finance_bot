@@ -1,76 +1,74 @@
 {% extends "base.html" %}
 
 {% block content %}
-    <div class="container">
-        <br>
-        <div class="row">
-            <div class="col">
-                <div class="text-center">
-                        <h2>{{ title }}</h2>
-                </div>
+    <br>
+    <div class="row">
+        <div class="col">
+            <div class="text-center">
+                    <h2>{{ title }}</h2>
             </div>
         </div>
-        <br>
-        <div class="row">
-            <div class="col-2">
-                <div class="text-left">
-                    <h3>Период с: </h3>
-                </div>
-            </div>
-            <div class="col-2">
-                <input type="date" class="form-control">
-            </div>
-            <div class="col-1">
-                <div class="text-center">
-                    <h3>по: </h3>
-                </div>
-            </div>
-            <div class="col-2">
-                <input type="date" class="form-control">
-            </div>    
-            <div class="col-2">
-                <button type="button" class="btn btn-primary" id="add_btn" onclick="add_new_row()">Применить</button>
-            </div>
-        </div>
-        <br>
-        <table class="table table-bordered" id="account_table">
-            <thead class="thead-light">
-                <tr>
-                    <th scope="col" style="width: 5%;text-align: center">#</th>
-                    <th scope="col" style="width: 12%;text-align: center">Дата</th>
-                    <th scope="col" style="width: 35%;text-align: center">Категория</th>
-                    <th scope="col" style="width: 10%;text-align: center">Счет</th>
-                    <th scope="col" style="width: 10%;text-align: center">Сумма</th>
-                    <th scope="col" style="width: 5%;text-align: center">Валюта</th>
-                    <th scope="col" style="width: 13%;text-align: center"></th>
-                    <th scope="col" style="width: 10%;text-align: center"></th>
-                </tr>
-            </thead>
-            <tbody>
-                {% for transaction in transaction_list %}
-                    <tr>
-                        <td class = "align-middle">
-                            <span id="number{{ loop.index }}">{{ loop.index }}</span></td>
-                        <td class = "align-middle">
-                            <span id="date{{ loop.index }}">{{ transaction['date'] }}</span></td>
-                        <td class = "align-middle">
-                            <span id="category{{ loop.index }}">{{ transaction['category'] }}</span></td>
-                        <td class = "align-middle">
-                            <span id="account{{ loop.index }}">{{ transaction['account'] }}</span></td>
-                        <td class = "align-middle" style="text-align: right">
-                            <span id="amount{{ loop.index }}">{{ transaction['amount'] }}</span></td>
-                        <td class = "align-middle">
-                            <span id="currency{{ loop.index }}">{{ transaction['currency'] }}</span></td>
-                        <td class = "align-middle text-center">
-                            <button type="button" class="btn btn-secondary" id="left_btn{{ loop.index }}" onclick="edit_transaction.call(this)">Изменить</button>
-                        </td>
-                        <td class = "align-middle text-center">
-                            <button type="button" class="btn btn-secondary" id="right_btn{{ loop.index }}" onclick="delete_transaction.call(this)">Удалить</button>
-                        </td>
-                    </tr>
-                {% endfor %}
-            </tbody>
-        </table>
     </div>
-    <script src="{{url_for('static', filename='transaction/index.js')}}"></script>
+    <br>
+    <div class="row">
+        <div class="col-2">
+            <div class="text-left">
+                <h3>Период с: </h3>
+            </div>
+        </div>
+        <div class="col-3">
+            <input type="date" class="form-control" id="start_date" value={{ period["start"] }} }>
+        </div>
+        <div class="col-1">
+            <div class="text-center">
+                <h3>по: </h3>
+            </div>
+        </div>
+        <div class="col-3">
+            <input type="date" class="form-control" id="end_date" value={{ period["end"] }} }>
+        </div>    
+        <div class="col-2">
+            <button type="button" class="btn btn-primary" id="add_btn" onclick="set_period_and_update()">Применить</button>
+        </div>
+    </div>
+    <br>
+    <table class="table table-bordered" id="transaction_table">
+        <thead class="thead-light">
+            <tr>
+                <th scope="col" style="width: 5%;text-align: center">#</th>
+                <th scope="col" style="width: 12%;text-align: center">Дата</th>
+                <th scope="col" style="width: 35%;text-align: center">Категория</th>
+                <th scope="col" style="width: 10%;text-align: center">Счет</th>
+                <th scope="col" style="width: 10%;text-align: center">Сумма</th>
+                <th scope="col" style="width: 5%;text-align: center">Валюта</th>
+                <th scope="col" style="width: 13%;text-align: center"></th>
+                <th scope="col" style="width: 10%;text-align: center"></th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for transaction in transaction_list %}
+                <tr>
+                    <td class = "align-middle">
+                        <span id="number{{ loop.index }}">{{ loop.index }}</span></td>
+                    <td class = "align-middle">
+                        <span id="date{{ loop.index }}">{{ transaction['date'] }}</span></td>
+                    <td class = "align-middle">
+                        <span id="category{{ loop.index }}">{{ transaction['category'] }}</span></td>
+                    <td class = "align-middle">
+                        <span id="account{{ loop.index }}">{{ transaction['account'] }}</span></td>
+                    <td class = "align-middle" style="text-align: right">
+                        <span id="amount{{ loop.index }}">{{ transaction['amount'] }}</span></td>
+                    <td class = "align-middle">
+                        <span id="currency{{ loop.index }}">{{ transaction['currency'] }}</span></td>
+                    <td class = "align-middle text-center">
+                        <button type="button" class="btn btn-secondary" id="left_btn{{ loop.index }}" onclick="edit_transaction.call(this)" disabled>Изменить</button>
+                    </td>
+                    <td class = "align-middle text-center">
+                        <button type="button" class="btn btn-secondary" id="right_btn{{ loop.index }}" onclick="delete_transaction.call(this)">Удалить</button>
+                    </td>
+                </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+    <script src="{{url_for('static', filename='transaction/index.js')}}" onload="set_period()"></script>
 {% endblock %}

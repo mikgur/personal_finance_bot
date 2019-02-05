@@ -4,9 +4,14 @@ import datetime
 import logging
 
 from sqlalchemy.orm import sessionmaker
+from sqlalchemy.orm.exc import MultipleResultsFound, NoResultFound
 
 from .data_observer import get_all_category_names, get_all_account_names
-from .exceptions import ObjectAlreadyExist, WrongCategoryType
+from .exceptions import (
+    AccountNotFoundOrMultipleAccounts, CategoryNotFoundOrMultipleCategories,
+    ObjectAlreadyExist, TransactionTypeNotFoundOrMultipleTransactionTypes,
+    UserNotFoundOrMultipleUsers, WrongCategoryType
+)
 from .model import (
     Account, AccountType, Category, CategoryType, Currency, Transaction,
     TransactionType, User, db
@@ -115,35 +120,52 @@ def add_category(name, user_id, category_type_name="expense"):
 
 
 def add_transaction(transaction, user_id):
-    try:
-        Session = sessionmaker(bind=db)
-        session = Session()
 
+    Session = sessionmaker(bind=db)
+    session = Session()
+    try:
         # Search current user
         user = session.query(User).filter(User.user_id == user_id).one()
         # Search account for current user
+    except (NoResultFound, MultipleResultsFound) as exc:
+        logging.error(f"Cannot get user from database: {exc}")
+        raise UserNotFoundOrMultipleUsers
+
+    try:
         account = session.query(Account).filter(Account.user_id == user.id)\
             .filter(Account.name == transaction["account"]).one()
+    except (NoResultFound, MultipleResultsFound) as exc:
+        logging.error(f"Cannot get account from database: {exc}")
+        raise AccountNotFoundOrMultipleAccounts
+
+    try:
         # Search category for current user
         category = session.query(Category).filter(Category.user_id == user.id)\
             .filter(Category.name == transaction["category"]).one()
+    except (NoResultFound, MultipleResultsFound) as exc:
+        logging.error(f"Cannot get account from database: {exc}")
+        raise CategoryNotFoundOrMultipleCategories
+
+    try:
         # Search transaction type
         transaction_type = session.query(TransactionType).filter(
             TransactionType.name == transaction["type"]
         ).one()
-        # Make a new transaction
-        new_transaction = Transaction(
-            date=datetime.date.today(),
-            user=user,
-            category=category,
-            account=account,
-            type=transaction_type,
-            amount=float(transaction["amount"])
-        )
-        session.add(new_transaction)
-        session.commit()
-    except Exception as exc:
-        logging.error(f'Error while adding transaction: {exc}')
+    except (NoResultFound, MultipleResultsFound) as exc:
+        logging.error(f"Cannot get account from database: {exc}")
+        raise TransactionTypeNotFoundOrMultipleTransactionTypes
+
+    # Make a new transaction
+    new_transaction = Transaction(
+        date=datetime.date.today(),
+        user=user,
+        category=category,
+        account=account,
+        type=transaction_type,
+        amount=float(transaction["amount"])
+    )
+    session.add(new_transaction)
+    session.commit()
 
 
 def add_user(user_id, first_name, username):
@@ -242,6 +264,68 @@ def delete_category(user_id, category_name, category_type_name):
     except Exception as exc:
         logging.error(f"Cannot delete category: {exc}")
         return False
+
+
+def delete_transaction(user_id, transaction, transaction_type_name="expense"):
+    Session = sessionmaker(bind=db)
+    session = Session()
+
+    try:
+        # Search current user
+        user = session.query(User).filter(User.user_id == user_id).one()
+        # Search account for current user
+    except (NoResultFound, MultipleResultsFound) as exc:
+        logging.error(f"Cannot get user from database: {exc}")
+        raise UserNotFoundOrMultipleUsers
+
+    try:
+        account = session.query(Account).filter(Account.user_id == user.id)\
+            .filter(Account.name == transaction["account"]).one()
+    except (NoResultFound, MultipleResultsFound) as exc:
+        logging.error(f"Cannot get account from database: {exc}")
+        raise AccountNotFoundOrMultipleAccounts
+
+    try:
+        # Search category for current user
+        category = session.query(Category).filter(Category.user_id == user.id)\
+            .filter(Category.name == transaction["category"]).one()
+    except (NoResultFound, MultipleResultsFound) as exc:
+        logging.error(f"Cannot get account from database: {exc}")
+        raise CategoryNotFoundOrMultipleCategories
+
+    try:
+        # Search transaction type
+        transaction_type = session.query(TransactionType).filter(
+            TransactionType.name == transaction_type_name
+        ).one()
+    except (NoResultFound, MultipleResultsFound) as exc:
+        logging.error(f"Cannot get account from database: {exc}")
+        raise TransactionTypeNotFoundOrMultipleTransactionTypes
+
+    try:
+        amount = float(transaction["amount"].replace(" ", ""))
+    except ValueError:
+        logging.error(f"cannot convert amount to float")
+        return False
+
+    query = session.query(
+            Transaction
+        ).join(Category, Account, Currency, TransactionType).filter(
+            Transaction.user_id == user.id,
+            Transaction.type_id == transaction_type.id,
+            Transaction.account_id == account.id,
+            Transaction.category_id == category.id,
+            Transaction.date == transaction["date"],
+            Transaction.amount == amount
+        )
+
+    db_transaction = query.first()
+    if db_transaction:
+        session.delete(db_transaction)
+        session.commit()
+        return True
+    
+    return False
 
 
 def edit_account(
