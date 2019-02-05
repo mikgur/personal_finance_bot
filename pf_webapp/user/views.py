@@ -5,7 +5,7 @@ from sqlalchemy.orm import sessionmaker
 from pf_model.exceptions import UserNotFoundOrMultipleUsers
 from pf_model.model import User, db
 from pf_webapp.user.forms import LoginForm, RegistrationForm
-from utils import send_otc
+from utils import send_otp
 
 blueprint = Blueprint("user", __name__, url_prefix="/user")
 
@@ -56,7 +56,7 @@ def process_reg():
             ).one()
         except UserNotFoundOrMultipleUsers:
             return "Wrong_telegram_id"
-        user.otc = ""
+        user.otp = ""
         user.set_password(form.password.data)
         session.commit()
         return redirect(url_for('user.login'))
@@ -69,10 +69,10 @@ def process_reg():
         return redirect(url_for('user.register'))
 
 
-@blueprint.route("/request-otc", methods=["POST"])
-def request_otc():
+@blueprint.route("/request-otp", methods=["POST"])
+def request_otp():
     try:
-        send_otc(request.get_json())
+        send_otp(request.get_json())
     except UserNotFoundOrMultipleUsers:
         return "Wrong_telegram_id"
     return "Success"

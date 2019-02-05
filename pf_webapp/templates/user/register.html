@@ -26,11 +26,11 @@
                         {{ form.bot_code() }}
                     </div>
                     <div class="form col-4">
-                        <button type="button" class="btn btn-secondary" onclick="request_otc()">Отправить код</button>
+                        <button type="button" class="btn btn-secondary" onclick="request_otp()">Отправить код</button>
                     </div>
                 </div>
-                <small id="oneTimeCodeHelp" class="form-text text-muted">Этот код можно также получить у телеграм бота,
-                    используя команду /code</small>
+                <small id="oneTimeCodeHelp" class="form-text text-muted">Этот код можно также получить у телеграм-бота,
+                    используя команду /send_otp</small>
             </div>
             <div class="form-group">
                 {{ form.password.label }}

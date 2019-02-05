@@ -7,8 +7,9 @@ from sqlalchemy_utils import create_database, database_exists
 
 import settings
 
-from .model import (AccountType, CategoryType, Currency, TransactionType, base,
-                    db)
+from .model import (
+    AccountType, CategoryType, Currency, TransactionType, base, db
+)
 
 
 def create_db():
@@ -19,8 +20,10 @@ def create_db():
             base.metadata.create_all(db)
             logging.info("Done!")
         else:
-            logging.warning(f"Database {settings.DB_DATABASE} exist. \
-                             Please provide another DB_DATABASE in settings.py")
+            logging.warning(
+                f"Database {settings.DB_DATABASE} exist. \
+                             Please provide another DB_DATABASE in settings.py"
+            )
 
         Session = sessionmaker(bind=db)
         session = Session()
