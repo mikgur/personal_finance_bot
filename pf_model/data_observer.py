@@ -128,6 +128,64 @@ def get_all_telegram_id():
         return []
 
 
+def get_list_of_transactions(user_id,
+                             transaction_type_name="expense",
+                             period=None):
+    """returns a list of dictionaries with transaction info.
+    Example:
+    [{'date': 28/02/2019, 'category': 'Кот', 'account': 'Наличные',
+    'amount': 3500, 'currency': 'руб'}]
+    """
+    Session = sessionmaker(bind=db)
+    session = Session()
+
+    try:
+        user = session.query(User).filter(User.user_id == user_id).one()
+    except (NoResultFound, MultipleResultsFound) as exc:
+        logging.error(f"Cannot get user from database: {exc}")
+        raise UserNotFoundOrMultipleUsers
+    try:
+        transaction_type = (session
+                            .query(TransactionType)
+                            .filter(
+                                TransactionType.name == transaction_type_name
+                            )
+                            .one())
+    except (NoResultFound, MultipleResultsFound) as exc:
+        logging.error(f"Cannot get transaction_type from database: {exc}")
+        raise WrongCategoryType
+
+    try:
+        query = session.query(
+            Transaction.date,
+            Category.name,
+            Account.name,
+            Transaction.amount,
+            Currency.shortname
+        ).join(Category, Account, Currency).filter(
+            Transaction.user_id == user.id,
+            Transaction.type_id == transaction_type.id
+        )
+        if period:
+            query = query.filter(
+                Transaction.date >= period[0],
+                Transaction.date <= period[1]
+            )
+    except Exception as exc:
+        logging.error(f"Cannot get transactions info from database: {exc}")
+        return []
+
+    transactions_info = [
+        {'date': transaction[0],
+         'category': transaction[1],
+         'account': transaction[2],
+         'amount': f'{transaction[3]:,.2f}'.replace(',', ' '),
+         'currency': transaction[4]} for transaction in query.all()
+    ]
+
+    return transactions_info
+
+
 def get_user_chat_id(telegram_id):
     try:
         Session = sessionmaker(bind=db)
