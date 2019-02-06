@@ -100,5 +100,6 @@ def show_statistics(bot, update):
     plot.set_xlabel("")
     imgdata = BytesIO()
     plot.figure.savefig(imgdata, format="png")
+    plot.clear()
     imgdata.seek(0)
     bot.send_photo(chat_id=update.message.chat_id, photo=imgdata)
