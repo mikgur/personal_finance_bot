@@ -23,8 +23,8 @@ def start_chat(bot, update):
         text = f"{text} слушаю тебя"
     else:
         text = f"{text} я помогу тебе управлять личными финансами. Для начала \
-        я заведу тебе несколько стандартных категорий, пару кошельков и вид \
-        дохода - Зарплата"
+я заведу тебе несколько стандартных категорий, пару кошельков и вид \
+дохода - Зарплата"
 
         data_manipulator.add_user(user.id, user.first_name, user.username)
 
@@ -100,5 +100,6 @@ def show_statistics(bot, update):
     plot.set_xlabel("")
     imgdata = BytesIO()
     plot.figure.savefig(imgdata, format="png")
+    plot.clear()
     imgdata.seek(0)
     bot.send_photo(chat_id=update.message.chat_id, photo=imgdata)
