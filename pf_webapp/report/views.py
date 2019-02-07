@@ -1,17 +1,15 @@
-from flask import Blueprint, render_template, redirect, url_for
+import pandas as pd
+
+from bokeh.embed import components
+from bokeh.plotting import figure
+from bokeh.resources import INLINE
+from bokeh.util.string import encode_utf8
+from bokeh.models import ColumnDataSource
+from flask import Blueprint, redirect, render_template, url_for
 from flask_login import current_user
 
-
-from bokeh.embed import server_document
-from bokeh.layouts import column
-from bokeh.models import ColumnDataSource, Slider
-from bokeh.plotting import figure
-from bokeh.server.server import Server
-from bokeh.themes import Theme
-from tornado.ioloop import IOLoop
-
-from bokeh.sampledata.sea_surface_temperature import sea_surface_temperature
-
+from pf_model import data_observer
+from utils import get_current_month, get_last_month
 
 blueprint = Blueprint("report", __name__, url_prefix="/report")
 
@@ -20,44 +18,53 @@ blueprint = Blueprint("report", __name__, url_prefix="/report")
 def index():
     if not current_user.is_authenticated:
         return redirect(url_for("user.login"))
-    script = server_document('http://localhost:5006/bkapp')
-    return render_template("report/index.html",
-                           script=script, template="Flask")
 
+    user_id = current_user.user_id
 
-def modify_doc(doc):
-    df = sea_surface_temperature.copy()
-    source = ColumnDataSource(data=df)
+    current_month = get_current_month()
+    current_month_data = data_observer.statistics_for_period_by_category(
+        user_id, current_month['period']
+    )
+    df_current = pd.DataFrame(current_month_data,
+                              columns=['Amount', 'Category'])
+    df_current['Month'] = current_month['name']
 
-    plot = figure(x_axis_type='datetime', y_range=(0, 25),
-                  y_axis_label='Temperature (Celsius)',
-                  title="Sea Surface Temperature at 43.18, -70.43")
-    plot.line('time', 'temperature', source=source)
+    last_month = get_last_month()
+    last_month_data = data_observer.statistics_for_period_by_category(
+        user_id, last_month['period']
+    )
+    df_last = pd.DataFrame(last_month_data, columns=['Amount', 'Category'])
+    df_last['Month'] = last_month['name']
 
-    def callback(attr, old, new):
-        if new == 0:
-            data = df
-        else:
-            data = df.rolling('{0}D'.format(new)).mean()
-        source.data = ColumnDataSource(data=data).data
+    source = ColumnDataSource(pd.concat([df_current, df_last]))
 
-    slider = Slider(start=0, end=30,
-                    value=0, step=1, title="Smoothing by N Days")
-    slider.on_change('value', callback)
+    p = figure(x_range=df_current['Category'],
+               y_range=(0, df_current['Amount'].max() + 10000),
+               plot_height=250,
+               title="Затраты в текущем месяце",
+               toolbar_location=None, tools="")
 
-    doc.add_root(column(slider, plot))
+    p.vbar(x='Category',
+           top='Amount',
+           width=0.5,
+           legend="Month",
+           source=source)
 
-    doc.theme = Theme(filename="pf_webapp/report/theme.yaml")
+    p.xgrid.grid_line_color = None
+    p.legend.orientation = "horizontal"
+    p.legend.location = "top_center"
 
+    # grab the static resources
+    js_resources = INLINE.render_js()
+    css_resources = INLINE.render_css()
 
-def bk_worker():
-    # Can't pass num_procs > 1 in this configuration. If you need to run
-    # multiple processes, see e.g. flask_gunicorn_embed.py
-    server = Server({'/bkapp': modify_doc}, io_loop=IOLoop(),
-                    allow_websocket_origin=["*"])
-    # allow_websocket_origin=["localhost:8000"]
-    server.start()
-    server.io_loop.start()
-
-from threading import Thread  # NOQA
-Thread(target=bk_worker).start()
+    # render template
+    script, div = components(p)
+    html = render_template(
+        'report/index.html',
+        plot_script=script,
+        plot_div=div,
+        js_resources=js_resources,
+        css_resources=css_resources,
+    )
+    return encode_utf8(html)

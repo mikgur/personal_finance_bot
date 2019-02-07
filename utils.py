@@ -1,3 +1,5 @@
+import calendar
+import datetime
 from random import randint
 
 from telegram import Bot
@@ -22,3 +24,21 @@ def send_otp(telegram_id):
     )
     bot = Bot(settings.API_KEY, request=request)
     bot.sendMessage(chat_id=chat_id, text=code)
+
+
+def get_current_month():
+    today = datetime.date.today()
+    first_day_of_month = datetime.date(today.year, today.month, 1)
+    return {"name": calendar.month_name[today.month],
+            "period": [first_day_of_month, today]}
+
+
+def get_last_month():
+    today = datetime.date.today()
+    first = today.replace(day=1)
+    lastMonth = first - datetime.timedelta(days=1)
+    first_day = datetime.date(lastMonth.year, lastMonth.month, 1)
+    number_of_days = calendar.monthrange(lastMonth.year, lastMonth.month)[1]
+    last_day = datetime.date(lastMonth.year, lastMonth.month, number_of_days)
+    return {"name": calendar.month_name[last_day.month],
+            "period": [first_day, last_day]}
