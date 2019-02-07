@@ -2,6 +2,7 @@
 '''
 import logging
 
+import pandas as pd
 from sqlalchemy import func
 from sqlalchemy.orm import sessionmaker
 from sqlalchemy.orm.exc import MultipleResultsFound, NoResultFound
@@ -130,7 +131,8 @@ def get_all_telegram_id():
 
 def get_list_of_transactions(user_id,
                              transaction_type_name="expense",
-                             period=None):
+                             period=None,
+                             amount_as_string=True):
     """returns a list of dictionaries with transaction info.
     Example:
     [{'date': 28/02/2019, 'category': 'Кот', 'account': 'Наличные',
@@ -169,22 +171,32 @@ def get_list_of_transactions(user_id,
         transactions_query = query
         if period:
             transactions_query = query.filter(
-                Transaction.date >= period["start"],
-                Transaction.date <= period["end"]
+                Transaction.date >= period[0],
+                Transaction.date <= period[1]
             )
     except Exception as exc:
         logging.error(f"Cannot get transactions info from database: {exc}")
         return []
 
-    transactions_info = [
-        {'date': f"{transaction[0]:%Y-%m-%d}",
-         'category': transaction[1],
-         'account': transaction[2],
-         'amount': f'{transaction[3]:,.2f}'.replace(',', ' '),
-         'currency': transaction[4]} for transaction
-        in transactions_query.all()
-    ]
+    if amount_as_string:
+        transactions_info = [
+            {'date': f"{transaction[0]:%Y-%m-%d}",
+             'category': transaction[1],
+             'account': transaction[2],
+             'amount': f'{transaction[3]:,.2f}'.replace(',', ' '),
+             'currency': transaction[4]} for transaction
+            in transactions_query.all()
+        ]
+        return transactions_info
 
+    transactions_info = [
+            {'date': f"{transaction[0]:%Y-%m-%d}",
+             'category': transaction[1],
+             'account': transaction[2],
+             'amount': transaction[3],
+             'currency': transaction[4]} for transaction
+            in transactions_query.all()
+        ]
     return transactions_info
 
 
@@ -231,3 +243,29 @@ def statistics_for_period_by_category(
     except Exception as exc:
         logging.error(f"Cannot get transactions list from database: {exc}")
         return []
+
+
+def get_categories_trends(
+    user_id, period, transaction_type_name="expense"
+):
+    transactions = get_list_of_transactions(
+        user_id=user_id,
+        period=period,
+        transaction_type_name=transaction_type_name,
+        amount_as_string=False
+    )
+
+    transaction_data = [(tr['date'], tr['amount'], tr['category']) for
+                        tr in transactions]
+    categories = list(set(tr[2] for tr in transaction_data))
+    for category in categories:
+        transaction_data.append((period[0], 0, category))
+
+    data = pd.DataFrame(transaction_data,
+                        columns=['date', 'amount', 'category'])
+    data['date'] = pd.to_datetime(data['date'])
+    data.sort_values(by=['date'], inplace=True)
+    categories = data['category'].unique()
+
+    return {cat: data[data['category'] == cat].groupby('date').sum().cumsum()
+            for cat in categories}

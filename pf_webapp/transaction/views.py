@@ -1,10 +1,10 @@
-import datetime
 import json
 
 from flask import Blueprint, redirect, render_template, request, url_for
 from flask_login import current_user
 
 from pf_model import data_manipulator, data_observer
+from utils import get_current_month
 
 blueprint = Blueprint("transaction", __name__, url_prefix="/transaction")
 
@@ -15,18 +15,19 @@ def index():
         return redirect(url_for("user.login"))
     user_id = current_user.user_id
     title = "Транзакции - Расходы"
-    today = datetime.date.today()
-    first_day_of_month = datetime.date(today.year, today.month, 1)
-    period = {"start": first_day_of_month, "end": today}
+    period = get_current_month()
 
-    transactions = data_observer.get_list_of_transactions(user_id,
-                                                          period=period
-                                                          )
+    transactions = data_observer.get_list_of_transactions(
+        user_id,
+        period=period["period"]
+    )
     return render_template(
         "transaction/index.html",
         title=title,
-        transaction_list=transactions,
-        period=period
+        transaction_list=sorted(transactions,
+                                key=lambda tr: tr['date'],
+                                reverse=True),
+        period=period["period"]
     )
 
 
@@ -44,8 +45,9 @@ def update():
     transactions = data_observer.get_list_of_transactions(user_id,
                                                           period=filters
                                                           )
-
-    return json.dumps(sorted(transactions, key=lambda tr: tr['date']))
+    return json.dumps(sorted(transactions, 
+                             key=lambda tr: tr['date'],
+                             reverse=True))
 
 
 @blueprint.route("/delete_transaction", methods=["POST"])

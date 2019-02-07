@@ -5,15 +5,15 @@ import matplotlib
 matplotlib.use("Agg")  # NOQA
 import seaborn as sns
 
-from pf_bot.utils import get_keyboard, month_edges, parse_transaction
+from pf_bot.utils import get_keyboard, parse_transaction
 from pf_model import data_manipulator, data_observer
 from pf_model.exceptions import NoCurrencies, WrongCategory
 from pf_model.utils import is_existing_user
-import utils
+from utils import send_otp, get_current_month, get_last_month
 
 
-def send_otp(bot, update):
-    utils.send_otp(update.message.from_user.username)
+def send_one_time_passowrd(bot, update):
+    send_otp(update.message.from_user.username)
 
 
 def start_chat(bot, update):
@@ -63,7 +63,7 @@ def show_statistics(bot, update):
 
     reply_text = "Вот статистика расходов в текущем месяце:\n "
     for expense in data_observer.statistics_for_period_by_category(
-        user.id, month_edges()
+        user.id, get_current_month()['period']
     ):
         amount = f"{expense[0]:,.0f}".replace(",", " ")
         reply_text = "\n".join([reply_text, f"{expense[1]} - {amount}"])
@@ -72,7 +72,7 @@ def show_statistics(bot, update):
         [reply_text, f"Твои расходы в прошлом месяце:\n "]
     )
     for expense in data_observer.statistics_for_period_by_category(
-        user.id, month_edges(1)
+        user.id, get_last_month()['period']
     ):
         amount = f"{expense[0]:,.0f}".replace(",", " ")
         reply_text = "\n".join([reply_text, f"{expense[1]} - {amount}"])
@@ -81,13 +81,13 @@ def show_statistics(bot, update):
 
     #  Send the barplot with statistics
     current_data = data_observer.statistics_for_period_by_category(
-        user.id, month_edges()
+        user.id, get_current_month()['period']
     )
     df_current = pd.DataFrame(current_data, columns=['Amount', 'Category'])
     df_current['Month'] = 'Current'
 
     previous_data = data_observer.statistics_for_period_by_category(
-        user.id, month_edges(1)
+        user.id, get_last_month()['period']
     )
     df_previous = pd.DataFrame(previous_data, columns=['Amount', 'Category'])
     df_previous['Month'] = 'Previous'
