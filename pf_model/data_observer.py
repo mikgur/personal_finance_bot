@@ -60,11 +60,12 @@ def get_all_account_names(
 
                 accounts_info.append(
                     [
-                        acc.name, f'{acc_balance:,.2f}'.replace(',', ' '),
+                        acc.name,
+                        f'{acc_balance:,.2f}'.replace(',', ' '),
                         acc.currency.shortname
                     ]
                 )
-            return accounts_info
+            return sorted(accounts_info, key=lambda a: a[0])
         return [acc.name for acc in query.all()]
     except Exception as exc:
         logging.error(f'Cannot get accounts from database: {exc}')
