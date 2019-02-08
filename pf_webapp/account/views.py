@@ -5,6 +5,7 @@ from flask_login import current_user
 
 from pf_model import data_manipulator, data_observer
 from pf_model.exceptions import ObjectAlreadyExist
+from utils import json_date_serial
 
 blueprint = Blueprint("account", __name__, url_prefix="/account")
 
@@ -72,4 +73,4 @@ def update():
         return redirect(url_for("user.login"))
     user_id = current_user.user_id
     accounts_list = sorted(data_observer.get_all_account_names(user_id))
-    return json.dumps(accounts_list)
+    return json.dumps(accounts_list, default=json_date_serial)

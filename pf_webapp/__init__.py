@@ -1,6 +1,6 @@
 import logging
 
-from flask import Flask, render_template
+from flask import Flask, redirect, url_for
 from flask_login import LoginManager
 from sqlalchemy.orm import sessionmaker
 
@@ -42,6 +42,6 @@ def create_app():
 
     @app.route("/", methods=["GET", "POST"])
     def index():
-        return render_template("category/index.html")
+        return redirect(url_for("report.expense"))
 
     return app

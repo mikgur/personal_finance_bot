@@ -90,6 +90,7 @@ class Account(base):
     type_id = Column(Integer, ForeignKey("account_types.id"), nullable=False)
     is_deleted = Column(Boolean, nullable=False)
     initial_balance = Column(Float, nullable=False)
+    creation_date = Column(Date, nullable=False)
 
     user = relationship("User")
     currency = relationship("Currency")
@@ -164,6 +165,7 @@ class Transaction(base):
     type = relationship("TransactionType")
 
     def __repr__(self):
-        return f"<Transaction(id='{self.id}', date='{self.date}', user='{self.user}',\
-                    category='{self.category}', amount='{self.amount}'\
-                    account='{self.account}', type='{self.type}')>"
+        return f"<Transaction(id='{self.id}', date='{self.date}', \
+    user='{self.user.user_name}', category='{self.category.name}', \
+    amount='{self.amount}' account='{self.account.name}', \
+    type='{self.type.name}')>"
