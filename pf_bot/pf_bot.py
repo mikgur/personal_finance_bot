@@ -27,8 +27,14 @@ def run_bot():
     dp.add_handler(categories_menu.conversation)
     dp.add_handler(
         RegexHandler(
-            make_re_template_for_menu(main_menu.statistics),
+            make_re_template_for_menu([main_menu.statistics]),
             handlers.show_statistics
+        )
+    )
+    dp.add_handler(
+        RegexHandler(
+            make_re_template_for_menu([main_menu.accounts]),
+            handlers.show_accounts
         )
     )
     my_bot.start_polling()

@@ -58,6 +58,15 @@ def add_transaction(bot, update):
         update.message.reply_text("Не могу распознать категорию")
 
 
+def show_accounts(bot, update):
+    user = update.effective_user
+    reply_text = "Остатки на счетах:\n "
+    for account in data_observer.get_all_account_names(user.id):
+        reply_text = "\n".join([reply_text, f"{account[0]}:\
+ {account[1]}{account[2]}"])
+    update.message.reply_text(reply_text)
+
+
 def show_statistics(bot, update):
     user = update.message.from_user
 

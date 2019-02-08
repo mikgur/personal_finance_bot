@@ -324,7 +324,7 @@ def delete_transaction(user_id, transaction, transaction_type_name="expense"):
         session.delete(db_transaction)
         session.commit()
         return True
-    
+
     return False
 
 
