@@ -1,6 +1,7 @@
 '''This module facilitates data write operations to model
 '''
 import logging
+from datetime import datetime
 
 import pandas as pd
 from sqlalchemy import func
@@ -259,13 +260,22 @@ def get_categories_trends(
                         tr in transactions]
     categories = list(set(tr[2] for tr in transaction_data))
     for category in categories:
-        transaction_data.append((period[0], 0, category))
+        dt_start_of_month = datetime(year=period[0].year,
+                                     month=period[0].month,
+                                     day=period[0].day)
+        transaction_data.append((dt_start_of_month, 0, category))
 
     data = pd.DataFrame(transaction_data,
                         columns=['date', 'amount', 'category'])
     data['date'] = pd.to_datetime(data['date'])
     data.sort_values(by=['date'], inplace=True)
-    categories = data['category'].unique()
 
-    return {cat: data[data['category'] == cat].groupby('date').sum().cumsum()
-            for cat in categories}
+    result = {cat: data[data['category'] == cat].groupby('date').sum().cumsum()
+              for cat in categories}
+
+    dt_end_of_month = datetime(year=period[1].year,
+                               month=period[1].month,
+                               day=period[1].day)
+    for cat in categories:
+        result[cat].loc[dt_end_of_month] = result[cat].iloc[-1]
+    return result
