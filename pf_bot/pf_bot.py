@@ -16,7 +16,7 @@ def run_bot():
     dp = my_bot.dispatcher
 
     dp.add_handler(CommandHandler("start", handlers.start_chat))
-    dp.add_handler(CommandHandler("send_otp", handlers.send_otp))
+    dp.add_handler(CommandHandler("send_otp", handlers.send_one_time_passowrd))
     # If message contains amount in a correct format (e.g. '100,23',
     # '50.23', '50.2') - Will try to parse and add a transaction
     dp.add_handler(

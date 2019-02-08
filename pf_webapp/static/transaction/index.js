@@ -1,8 +1,8 @@
-period = {}
+period = ["start", "end"]
 
 function set_period() {
-    period['start'] = document.getElementById('start_date').value
-    period['end'] = document.getElementById('end_date').value
+    period[0] = document.getElementById('start_date').value
+    period[1] = document.getElementById('end_date').value
 }
 
 

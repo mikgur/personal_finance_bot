@@ -17,7 +17,7 @@
             </div>
         </div>
         <div class="col-3">
-            <input type="date" class="form-control" id="start_date" value={{ period["start"] }} }>
+            <input type="date" class="form-control" id="start_date" value={{ period[0] }} }>
         </div>
         <div class="col-1">
             <div class="text-center">
@@ -25,7 +25,7 @@
             </div>
         </div>
         <div class="col-3">
-            <input type="date" class="form-control" id="end_date" value={{ period["end"] }} }>
+            <input type="date" class="form-control" id="end_date" value={{ period[1] }} }>
         </div>    
         <div class="col-2">
             <button type="button" class="btn btn-primary" id="add_btn" onclick="set_period_and_update()">Применить</button>
