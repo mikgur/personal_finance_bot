@@ -9,8 +9,8 @@ from pf_webapp.report.bokeh_reports import plot_reports
 blueprint = Blueprint("report", __name__, url_prefix="/report")
 
 
-@blueprint.route("/")
-def index():
+@blueprint.route("/expense")
+def expense():
     if not current_user.is_authenticated:
         return redirect(url_for("user.login"))
 
@@ -23,7 +23,7 @@ def index():
     # render template
     script, div = components(plot_reports(user_id))
     html = render_template(
-        'report/index.html',
+        'report/expense.html',
         plot_script=script,
         plot_div=div,
         js_resources=js_resources,
