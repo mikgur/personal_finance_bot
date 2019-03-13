@@ -106,7 +106,7 @@ def parse_transaction(line, user_id):
     # Search for account
     account_list = [
         account for account in data_observer.
-        get_all_account_names(user_id, with_amounts=False)
+        get_all_account_names(user_id, with_info=False)
         if account.lower() in text
     ]
     transaction_account = ""

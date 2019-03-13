@@ -31,7 +31,7 @@ def add_account(
 
     name = name.capitalize()
     if name in get_all_account_names(
-        user_id, account_type_name, with_amounts=False
+        user_id, account_type_name, with_info=False
     ):
         raise ObjectAlreadyExist
 
@@ -62,6 +62,7 @@ def add_account(
                     currency=currency,
                     type=account_type,
                     initial_balance=balance,
+                    creation_date=datetime.date.today(),
                     is_deleted=False
                 )
             )
@@ -341,7 +342,7 @@ def edit_account(
     try:
         new_account_name = new_account_name.capitalize()
         if new_account_name in get_all_account_names(
-            user_id, account_type_name, with_amounts=False
+            user_id, account_type_name, with_info=False
         ):
             raise ObjectAlreadyExist
         Session = sessionmaker(bind=db)

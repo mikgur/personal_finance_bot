@@ -1,23 +1,25 @@
 '''This module facilitates data write operations to model
 '''
 import logging
-from datetime import datetime
+import datetime
 
 import pandas as pd
 from sqlalchemy import func
 from sqlalchemy.orm import sessionmaker
 from sqlalchemy.orm.exc import MultipleResultsFound, NoResultFound
 
-from .exceptions import UserNotFoundOrMultipleUsers, WrongCategoryType
-from .model import (
-    Account, AccountType, Category, CategoryType, Currency, Transaction,
-    TransactionType, User, db
-)
+from .exceptions import (AccountNotFoundOrMultipleAccounts,
+                         UserNotFoundOrMultipleUsers, WrongCategoryType)
+from .model import (Account, AccountType, Category, CategoryType, Currency,
+                    Transaction, TransactionType, User, db)
 from .utils import get_category_type_by_alias
 
 
 def get_all_account_names(
-    user_id, account_type_name="general", with_amounts=True
+    user_id,
+    account_type_name="general",
+    with_info=True,
+    with_numeric_amounts=False
 ):
     """returns a list with names of all accounts of particular type with/
     without corresponding currency
@@ -35,7 +37,7 @@ def get_all_account_names(
                 ).one()
             )
             query = query.filter(Account.type == account_type)
-        if with_amounts:
+        if with_info:
             expense = (
                 session.query(TransactionType).filter(
                     TransactionType.name == "expense"
@@ -57,12 +59,14 @@ def get_all_account_names(
                         for tr in acc.transactions if tr.type == expense
                     )
                 )
-
                 accounts_info.append(
                     [
                         acc.name,
-                        f'{acc_balance:,.2f}'.replace(',', ' '),
-                        acc.currency.shortname
+                        (acc_balance if with_numeric_amounts
+                            else f'{acc_balance:,.2f}'.replace(',', ' ')),
+                        acc.currency.shortname,
+                        acc.creation_date,
+                        acc.initial_balance
                     ]
                 )
             return sorted(accounts_info, key=lambda a: a[0])
@@ -261,9 +265,9 @@ def get_categories_trends(
                         tr in transactions]
     categories = list(set(tr[2] for tr in transaction_data))
     for category in categories:
-        dt_start_of_month = datetime(year=period[0].year,
-                                     month=period[0].month,
-                                     day=period[0].day)
+        dt_start_of_month = datetime.date(year=period[0].year,
+                                          month=period[0].month,
+                                          day=period[0].day)
         transaction_data.append((dt_start_of_month, 0, category))
 
     data = pd.DataFrame(transaction_data,
@@ -274,9 +278,109 @@ def get_categories_trends(
     result = {cat: data[data['category'] == cat].groupby('date').sum().cumsum()
               for cat in categories}
 
-    dt_end_of_month = datetime(year=period[1].year,
-                               month=period[1].month,
-                               day=period[1].day)
+    dt_end_of_month = datetime.date(year=period[1].year,
+                                    month=period[1].month,
+                                    day=period[1].day)
     for cat in categories:
         result[cat].loc[dt_end_of_month] = result[cat].iloc[-1]
+    return result
+
+
+def get_account_balance(user_id, account_name, date):
+    Session = sessionmaker(bind=db)
+    session = Session()
+
+    try:
+        user = session.query(User).filter(User.user_id == user_id).one()
+    except (NoResultFound, MultipleResultsFound) as exc:
+        logging.error(f"Cannot get user from database: {exc}")
+        raise UserNotFoundOrMultipleUsers
+
+    try:
+        account = session.query(Account).filter(
+            Account.user == user,
+            Account.name == account_name
+        ).one()
+    except (NoResultFound, MultipleResultsFound) as exc:
+        logging.error(f"Cannot get account from database: {exc}")
+        raise AccountNotFoundOrMultipleAccounts
+    expense = (
+        session.query(TransactionType).filter(
+            TransactionType.name == "expense"
+        ).one()
+    )
+    income = (
+        session.query(TransactionType).filter(
+            TransactionType.name == "income"
+        ).one()
+    )
+    income_transactions = session.query(Transaction).filter(
+        Transaction.account == account,
+        Transaction.type == income,
+        Transaction.date < date
+    ).all()
+    expense_transactions = session.query(Transaction).filter(
+        Transaction.account == account,
+        Transaction.type == expense,
+        Transaction.date < date
+    ).all()
+    balance = (account.initial_balance
+               if account.creation_date <= date else 0)
+    balance += (sum(tr.amount for tr in income_transactions)
+                - sum(tr.amount for tr in expense_transactions))
+    return balance
+
+
+def get_balances_trends(
+    user_id, period
+):
+    expense = get_list_of_transactions(
+        user_id=user_id,
+        period=period,
+        transaction_type_name="expense",
+        amount_as_string=False
+    )
+
+    income = get_list_of_transactions(
+        user_id=user_id,
+        period=period,
+        transaction_type_name="income",
+        amount_as_string=False
+    )
+
+    expense_data = [(tr['date'], -tr['amount'], tr['account']) for
+                    tr in expense]
+    income_data = [(tr['date'], tr['amount'], tr['account']) for
+                   tr in income]
+    transaction_data = expense_data + income_data
+
+    accounts = get_all_account_names(user_id)
+    for account in accounts:
+        dt_start_of_month = datetime.date(year=period[0].year,
+                                          month=period[0].month,
+                                          day=period[0].day)
+        transaction_data.append((dt_start_of_month,
+                                 get_account_balance(user_id,
+                                                     account[0],
+                                                     dt_start_of_month),
+                                 account[0]))
+        if period[0] < account[3] <= period[1]:
+            transaction_data.append((account[3],
+                                     account[4],
+                                     account[0]))
+
+    data = pd.DataFrame(transaction_data,
+                        columns=['date', 'amount', 'account'])
+    data['date'] = pd.to_datetime(data['date'])
+    data.sort_values(by=['date'], inplace=True)
+
+    result = {acc[0]:
+              data[data['account'] == acc[0]].groupby('date').sum().cumsum()
+              for acc in accounts}
+
+    dt_end_of_month = datetime.date(year=period[1].year,
+                                    month=period[1].month,
+                                    day=period[1].day)
+    for acc in accounts:
+        result[acc[0]].loc[dt_end_of_month] = result[acc[0]].iloc[-1]
     return result

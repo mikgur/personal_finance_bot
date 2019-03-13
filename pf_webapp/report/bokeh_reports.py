@@ -11,13 +11,40 @@ from pf_model import data_observer
 from utils import get_current_month, get_last_month
 
 
-def plot_reports(user_id):
+def plot_balance_report(user_id):
+    current_month = get_current_month()
+    current_month_trends = data_observer.get_balances_trends(
+        user_id,
+        current_month["period"])
+    current_title = f"Изменение остатков {current_month['name']}"
+
+    last_month = get_last_month()
+    last_month_trends = data_observer.get_balances_trends(
+        user_id,
+        last_month["period"])
+    last_title = f"Изменение остатков {last_month['name']}"
+
+    current_month_figure = make_trends_figure(current_month_trends,
+                                              current_title,
+                                              current_month)
+    last_month_figure = make_trends_figure(last_month_trends,
+                                           last_title,
+                                           last_month)
+    vertical_space = round(current_month_figure.plot_height * 0.1)
+    return column(
+                  current_month_figure,
+                  Spacer(height=vertical_space),
+                  last_month_figure
+                  )
+
+
+def plot_expense_reports(user_id):
     cats_plot = plot_categories(user_id)
-    trends_current_plot = plot_trends(
+    trends_current_plot = plot_expense_trends(
                             user_id,
                             get_current_month()
                             )
-    trends_last_plot = plot_trends(
+    trends_last_plot = plot_expense_trends(
                             user_id,
                             get_last_month()
                             )
@@ -79,25 +106,30 @@ def plot_categories(user_id):
     return cats_plot
 
 
-def plot_trends(user_id, period):
+def plot_expense_trends(user_id, period):
     trends = data_observer.get_categories_trends(
         user_id=user_id,
         period=period["period"]
     )
+    return make_trends_figure(trends,
+                              f"Распределение затрат в {period['name']}",
+                              period)
 
+
+def make_trends_figure(trends, title, period):
     trend_figure = figure(plot_height=500,
                           plot_width=1000,
                           x_axis_type="datetime",
                           x_range=(period["period"][0], period["period"][1]),
-                          title=f"Распределение затрат в {period['name']}",
+                          title=title,
                           toolbar_location=None,
                           )
     lines = []
     max_value = 0
     for i, trend in enumerate(trends):
         data_source = trends[trend]
-        if max_value < data_source.iloc[-1]['amount']:
-            max_value = data_source.iloc[-1]['amount']
+        if max_value < data_source['amount'].max():
+            max_value = data_source['amount'].max()
         lines.append(trend_figure.step(data_source.index,
                                        data_source['amount'],
                                        line_width=2,
@@ -105,7 +137,7 @@ def plot_trends(user_id, period):
                                        color=Category20[20][i % 20],
                                        ))
 
-    trend_figure.y_range = Range1d(0, max_value * 1.2)
+    trend_figure.y_range = Range1d(0, max_value * 1.1)
     trend_figure.xaxis[0].formatter = DatetimeTickFormatter(days=['%d %b'])
     trend_figure.yaxis[0].formatter = NumeralTickFormatter(format="0,0[.]00")
 
@@ -113,5 +145,4 @@ def plot_trends(user_id, period):
     legend = Legend(items=legend_items, location=(0, 0))
 
     trend_figure.add_layout(legend, 'right')
-
     return trend_figure

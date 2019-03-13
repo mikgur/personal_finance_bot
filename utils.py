@@ -42,3 +42,11 @@ def get_last_month():
     last_day = datetime.date(lastMonth.year, lastMonth.month, number_of_days)
     return {"name": calendar.month_name[last_day.month],
             "period": [first_day, last_day]}
+
+
+def json_date_serial(obj):
+    """JSON serializer for objects not serializable by default json code"""
+
+    if isinstance(obj, (datetime.datetime, datetime.date)):
+        return obj.isoformat()
+    raise TypeError("Type %s not serializable" % type(obj))
